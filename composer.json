@@ -1,0 +1,23 @@
+{
+  "name": "976-tuna/social",
+  "description": "A package to integrate social media platforms like Twitter, Facebook, and Instagram.",
+  "autoload": {
+    "psr-4": {
+      "Tuna976\\Social\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Sanaullah Kiani",
+      "email": "kianisanaullah@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "php": "^8.1",
+    "laravel/framework": "^12.0",
+    "guzzlehttp/guzzle": "^7.4",
+    "smolblog/oauth2-twitter": "^1.1"
+  }
+}
