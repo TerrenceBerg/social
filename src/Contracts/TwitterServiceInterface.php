@@ -1,38 +1,14 @@
 <?php
 
-namespace Tuna976\Contracts;
+namespace Tuna976\Social\Contracts;
 
 interface TwitterServiceInterface
 {
-    /**
-     * Authenticates the user with Twitter.
-     *
-     * @return void
-     */
-    public function authenticate(): void;
+    public function authenticate();
 
-    /**
-     * Posts a message to Twitter.
-     *
-     * @param string $message
-     * @param array $options Additional options, e.g., hashtags, mentions, etc.
-     * @return mixed
-     */
-    public function postMessage(string $message, array $options = []): mixed;
+    public function postMessage(string $message, array $options = []);
 
-    /**
-     * Posts media (image/video) to Twitter with an accompanying message.
-     *
-     * @param string $message
-     * @param string $mediaPath Path to the media file
-     * @return mixed
-     */
-    public function postMedia(string $message, string $mediaPath): mixed;
+    public function postMedia(string $message, string $mediaPath);
 
-    /**
-     * Fetches the user's Twitter timeline.
-     *
-     * @return mixed
-     */
-    public function fetchTimeline(): mixed;
+    public function fetchTimeline();
 }

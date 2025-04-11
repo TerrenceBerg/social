@@ -3,17 +3,21 @@
 namespace Tuna976\Social;
 
 use Illuminate\Support\ServiceProvider;
+use Tuna976\Social\Contracts\TwitterServiceInterface;
 use Tuna976\Social\Services\TwitterService;
 
 class SocialServiceProvider extends ServiceProvider
 {
     public function register()
     {
+        $this->mergeConfigFrom(__DIR__ . '/../config/social.php', 'social');
+
         $this->app->singleton(TwitterService::class, function ($app) {
             return new TwitterService();
         });
-
-        // You can register other social services like Facebook and Instagram here
+        $this->app->bind(TwitterService::class, function ($app) {
+            return new TwitterService();
+        });
     }
 
     public function boot()

@@ -1,83 +1,87 @@
 <?php
 
-namespace Tuna976\Services;
+namespace Tuna976\Social\Services;
 
-use Smolblog\OAuth2\Twitter\Provider;
-use Tuna976\Contracts\TwitterServiceInterface;
+use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Http;
+use Tuna976\Social\Contracts\TwitterServiceInterface;
 
-class TwitterService implements TwitterServiceInterface
+class TwitterService
 {
     protected $provider;
+    protected $authToken;
+    protected $credentials;
+    protected $accessToken;
+    protected Client $client;
 
     public function __construct()
     {
-        parent::__construct();
-
-        $this->provider = new Provider([
-            'clientId'     => env('TWITTER_CLIENT_ID'),
-            'clientSecret' => env('TWITTER_CLIENT_SECRET'),
-            'redirectUri'  => env('TWITTER_REDIRECT_URI'),
+        $this->client = new Client([
+            'base_uri' => 'https://api.twitter.com/',
         ]);
+
+        $this->authToken = config('social.twitter.auth_token');
+
+        $this->credentials = [
+            'client_id'     => config('social.twitter.consumer_key'),
+            'client_secret' => config('social.twitter.consumer_secret'),
+            'redirect_uri'  => config('social.twitter.redirect_uri'),
+        ];
     }
 
     public function authenticate(): void
     {
-        // Implementation for Twitter OAuth 2.0 authentication
-        // Handle the OAuth flow here and store the access token
+        $authUrl = $this->provider->getAuthorizationUrl();
+        session()->put('oauth2state', $this->provider->getState());
+
+        header('Location: ' . $authUrl);
+        exit;
     }
 
     public function postMessage(string $message, array $options = []): array
     {
-        // Use Twitter's API to post a tweet
-        $response = $this->client->post('https://api.twitter.com/2/tweets', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->accessToken,
+        return $this->authorizedRequest('POST', '2/tweets', [
+            'json' => [
+                'text' => $message
             ],
-            'json' => ['status' => $message],
         ]);
-
-        return json_decode($response->getBody(), true);
     }
 
     public function postMedia(string $message, string $mediaPath): array
     {
-        // Upload media and then post tweet
-        $mediaResponse = $this->client->post('https://upload.twitter.com/1.1/media/upload.json', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->accessToken,
-            ],
-            'multipart' => [
-                [
-                    'name'     => 'media',
-                    'contents' => fopen($mediaPath, 'r'),
-                ],
+        // Step 1: Upload to Twitter API v1.1
+        $uploadResponse = Http::withToken(config('social.twitter.auth_token'))
+            ->attach('media', file_get_contents($mediaPath), basename($mediaPath))
+            ->post('https://upload.twitter.com/1.1/media/upload.json');
+
+        $mediaId = $uploadResponse->json()['media_id_string'] ?? null;
+
+        if (!$mediaId) {
+            throw new \Exception('Media upload failed');
+        }
+
+        // Step 2: Post tweet with media using v2
+        return $this->authorizedRequest('POST', 'tweets', [], [
+            'text' => $message,
+            'media' => [
+                'media_ids' => [$mediaId],
             ],
         ]);
-
-        $media = json_decode($mediaResponse->getBody(), true);
-
-        $tweetResponse = $this->client->post('https://api.twitter.com/2/tweets', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->accessToken,
-            ],
-            'json' => [
-                'status' => $message,
-                'media_ids' => [$media['media_id']],
-            ],
-        ]);
-
-        return json_decode($tweetResponse->getBody(), true);
     }
 
-    public function fetchTimeline(): array
-    {
-        // Fetch user timeline
-        $response = $this->client->get('https://api.twitter.com/2/tweets', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->accessToken,
-            ],
-        ]);
 
-        return json_decode($response->getBody(), true);
+    protected function authorizedRequest(
+        string $method,
+        string $url,
+        array $options = []
+    ): array {
+        $headers = [
+            'Authorization' => 'Bearer ' . $this->authToken,
+            'Accept'        => 'application/json',
+        ];
+        $options['headers'] = array_merge($headers, $options['headers'] ?? []);
+        $response = $this->client->request(strtoupper($method), $url, $options);
+
+        return json_decode($response->getBody()->getContents(), true);
     }
 }
