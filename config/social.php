@@ -6,7 +6,7 @@ return [
         'consumer_secret' => env('TWITTER_CONSUMER_SECRET'),
         'access_token' => env('TWITTER_ACCESS_TOKEN'),
         'access_token_secret' => env('TWITTER_ACCESS_TOKEN_SECRET'),
-        'auth_token' => env('TWITTER_AUTH_TOKEN_SECRET'),
+        'auth_token' => env('TWITTER_ACCESS_TOKEN'),
         'redirect_uri' => env('TWITTER_REDIRECT_URI'),
     ],
 ];
