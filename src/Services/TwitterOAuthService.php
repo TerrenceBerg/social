@@ -48,9 +48,7 @@ class TwitterOAuthService
 
         return "{$this->authorizeUrl}?{$params}";
     }
-
-
-    use Illuminate\Support\Facades\Http;
+    
 
     public function getAccessToken(string $code, string $verifier): array
     {
