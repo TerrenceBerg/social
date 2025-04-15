@@ -56,7 +56,7 @@ class TwitterOAuthService
         $clientSecret = config('social.twitter.client_id');
         $redirectUri = config('social.twitter.client_id');
 
-        $encodedCredentials = base64_encode("{$clientId}:{$clientSecret}");
+        $encodedCredentials = base64_encode($clientId . ':' . $clientSecret);
 
         $response = Http::asForm()
             ->withHeaders([
@@ -64,8 +64,8 @@ class TwitterOAuthService
                 'Content-Type' => 'application/x-www-form-urlencoded',
             ])
             ->post('https://api.twitter.com/2/oauth2/token', [
-                'code' => $code,
                 'grant_type' => 'authorization_code',
+                'code' => $code,
                 'client_id' => $clientId,
                 'redirect_uri' => $redirectUri,
                 'code_verifier' => $verifier,
@@ -74,6 +74,7 @@ class TwitterOAuthService
         if (!$response->successful()) {
             throw new \Exception('Failed to retrieve access token: ' . $response->body());
         }
+
 
         return $response->json();
     }
@@ -103,4 +104,5 @@ class TwitterOAuthService
 
         return $response->json();
     }
+
 }
