@@ -44,6 +44,7 @@ class TwitterOAuthService
             'state' => $state,
             'code_challenge' => $challenge,
             'code_challenge_method' => 'S256',
+            'grant_type' => 'authorization_code',
         ]);
 
         return "{$this->authorizeUrl}?{$params}";
