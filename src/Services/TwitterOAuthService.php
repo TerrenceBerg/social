@@ -60,11 +60,13 @@ class TwitterOAuthService
 
         $response = Http::asForm()
             ->withHeaders([
-                'Authorization' => "Basic {$encodedCredentials}",
+                'Authorization' => 'Basic ' . $encodedCredentials,
+                'Content-Type' => 'application/x-www-form-urlencoded',
             ])
             ->post('https://api.twitter.com/2/oauth2/token', [
-                'grant_type' => 'authorization_code',
                 'code' => $code,
+                'grant_type' => 'authorization_code',
+                'client_id' => $clientId,
                 'redirect_uri' => $redirectUri,
                 'code_verifier' => $verifier,
             ]);
