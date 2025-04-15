@@ -51,15 +51,25 @@ class TwitterOAuthService
 
     public function getAccessToken(string $code, string $verifier): array
     {
-        $response = Http::asForm()->post($this->tokenUrl, [
-            'grant_type' => 'authorization_code',
-            'client_id' => $this->clientId,
-            'redirect_uri' => $this->redirectUri,
-            'code' => $code,
-            'code_verifier' => $verifier,
-        ]);
+        $clientId = config('services.twitter.client_id');
+        $clientSecret = config('services.twitter.client_secret');
+        $redirectUri = config('services.twitter.redirect');
 
-        if ($response->failed()) {
+        $basicAuth = base64_encode($clientId . ':' . $clientSecret);
+
+        $response = Http::asForm()
+            ->withHeaders([
+                'Authorization' => 'Basic ' . $basicAuth,
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            ])
+            ->post('https://api.twitter.com/2/oauth2/token', [
+                'grant_type' => 'authorization_code',
+                'code' => $code,
+                'redirect_uri' => $redirectUri,
+                'code_verifier' => $verifier,
+            ]);
+
+        if (!$response->successful()) {
             throw new \Exception('Failed to retrieve access token: ' . $response->body());
         }
 
