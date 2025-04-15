@@ -49,6 +49,9 @@ class TwitterOAuthService
         return "{$this->authorizeUrl}?{$params}";
     }
 
+
+    use Illuminate\Support\Facades\Http;
+
     public function getAccessToken(string $code, string $verifier): array
     {
         $clientId = config('services.twitter.client_id');
@@ -57,11 +60,10 @@ class TwitterOAuthService
 
         $basicAuth = base64_encode($clientId . ':' . $clientSecret);
 
-        $response = Http::asForm()
-            ->withHeaders([
-                'Authorization' => 'Basic ' . $basicAuth,
-                'Content-Type' => 'application/x-www-form-urlencoded',
-            ])
+        $response = Http::asForm() // important: ensures it's sent as application/x-www-form-urlencoded
+        ->withHeaders([
+            'Authorization' => 'Basic ' . $basicAuth,
+        ])
             ->post('https://api.twitter.com/2/oauth2/token', [
                 'grant_type' => 'authorization_code',
                 'code' => $code,
@@ -75,7 +77,6 @@ class TwitterOAuthService
 
         return $response->json();
     }
-
     public function refreshToken(string $refreshToken): array
     {
         $response = Http::asForm()->post($this->tokenUrl, [
