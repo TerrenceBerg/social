@@ -48,20 +48,20 @@ class TwitterOAuthService
 
         return "{$this->authorizeUrl}?{$params}";
     }
-    
+
 
     public function getAccessToken(string $code, string $verifier): array
     {
-        $clientId = config('services.twitter.client_id');
-        $clientSecret = config('services.twitter.client_secret');
-        $redirectUri = config('services.twitter.redirect');
+        $clientId = config('social.twitter.client_id');
+        $clientSecret = config('social.twitter.client_id');
+        $redirectUri = config('social.twitter.client_id');
 
-        $basicAuth = base64_encode($clientId . ':' . $clientSecret);
+        $encodedCredentials = base64_encode("{$clientId}:{$clientSecret}");
 
-        $response = Http::asForm() // important: ensures it's sent as application/x-www-form-urlencoded
-        ->withHeaders([
-            'Authorization' => 'Basic ' . $basicAuth,
-        ])
+        $response = Http::asForm()
+            ->withHeaders([
+                'Authorization' => "Basic {$encodedCredentials}",
+            ])
             ->post('https://api.twitter.com/2/oauth2/token', [
                 'grant_type' => 'authorization_code',
                 'code' => $code,
