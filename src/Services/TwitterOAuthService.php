@@ -54,15 +54,14 @@ class TwitterOAuthService
     public function getAccessToken(string $code, string $verifier): array
     {
         $clientId = config('social.twitter.client_id');
-        $clientSecret = config('social.twitter.client_id');
-        $redirectUri = config('social.twitter.client_id');
+        $clientSecret = config('social.twitter.client_secret');
+        $redirectUri = config('social.twitter.redirect');
 
         $encodedCredentials = base64_encode($clientId . ':' . $clientSecret);
 
         $response = Http::asForm()
             ->withHeaders([
-                'Authorization' => 'Basic ' . $encodedCredentials,
-                'Content-Type' => 'application/x-www-form-urlencoded',
+                'Authorization' => 'Basic ' . $encodedCredentials
             ])
             ->post('https://api.twitter.com/2/oauth2/token', [
                 'grant_type' => 'authorization_code',
