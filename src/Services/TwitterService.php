@@ -5,8 +5,6 @@ namespace Tuna976\Social\Services;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Redirect;
-use Smolblog\OAuth2\Client\Provider\Twitter;
 use Tuna976\Social\Contracts\TwitterServiceInterface;
 
 class TwitterService implements TwitterServiceInterface
