@@ -8,5 +8,11 @@ return [
         'access_token_secret' => env('TWITTER_ACCESS_TOKEN_SECRET'),
         'auth_token' => env('TWITTER_ACCESS_TOKEN'),
         'redirect' => env('TWITTER_REDIRECT_URI'),
+        'scopes' => [
+            'tweet.read',
+            'users.read',
+            'tweet.write',
+            'offline.access',
+        ],
     ],
 ];

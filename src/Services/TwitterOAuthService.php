@@ -13,13 +13,14 @@ class TwitterOAuthService
     protected string $baseUrl = 'https://api.twitter.com';
     protected string $authorizeUrl = 'https://twitter.com/i/oauth2/authorize';
     protected string $tokenUrl = 'https://api.twitter.com/2/oauth2/token';
-    protected array $scopes = ['tweet.read', 'users.read'];
+    protected array $scopes;
 
     public function __construct()
     {
         $this->clientId = config('social.twitter.client_id');
         $this->clientSecret = config('social.twitter.client_secret');
         $this->redirectUri = config('social.twitter.redirect');
+        $this->scopes = config('social.twitter.scopes');
     }
 
     public function generatePkceVerifier(): string
