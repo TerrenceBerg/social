@@ -13,7 +13,7 @@ class TwitterOAuthService
     protected string $baseUrl = 'https://api.twitter.com';
     protected string $authorizeUrl = 'https://twitter.com/i/oauth2/authorize';
     protected string $tokenUrl = 'https://api.twitter.com/2/oauth2/token';
-    protected array $scopes = ['tweet.read', 'users.read', 'offline.access'];
+    protected array $scopes = ['tweet.read', 'users.read'];
 
     public function __construct()
     {
