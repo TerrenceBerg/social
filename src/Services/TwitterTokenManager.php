@@ -10,6 +10,14 @@ class TwitterTokenManager
         protected TokenStorageInterface $storage
     ) {}
 
+    public function storeInitialTokens(array $tokens): void
+    {
+        $this->storage->storeTokens([
+            'access_token' => $tokens['access_token'],
+            'refresh_token' => $tokens['refresh_token'] ?? null,
+            'expires_at' => now()->addSeconds($tokens['expires_in'])->timestamp,
+        ]);
+    }
     public function getAccessToken(): string
     {
         $expiresAt = $this->storage->getExpiresAt();

@@ -75,9 +75,16 @@ class TwitterOAuthService
         if (!$response->successful()) {
             throw new \Exception('Failed to retrieve access token: ' . $response->body());
         }
+        $tokens = $response->json();
+        app(\Tuna976\Social\Services\TwitterTokenManager::class)->storeInitialTokens($tokens);
 
-
-        return $response->json();
+        return [
+            'success' => true,
+            'message' => 'User authenticated and tokens stored.',
+            'tokens' => $tokens,
+            'user' => $this->getUserProfile($tokens['access_token']),
+        ];
+//        return $response->json();
     }
     public function refreshToken(string $refreshToken): array
     {
