@@ -12,11 +12,20 @@ class TwitterTokenManager
 
     public function storeInitialTokens(array $tokens): void
     {
+
+        $accessToken = $tokens['access_token'] ?? null;
+        $refreshToken = $tokens['refresh_token'] ?? null;
+
+        $expiresIn = $tokens['expires_in'] ?? 3600;
+        $expiresAt = now()->addSeconds($expiresIn);
+
+
         $this->storage->storeTokens([
-            'access_token' => $tokens['access_token'],
-            'refresh_token' => $tokens['refresh_token'] ?? null,
-            'expires_at' => now()->addSeconds($tokens['expires_in'])->timestamp,
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
+            'expires_at' => $expiresAt,
         ]);
+
     }
     public function getAccessToken(): string
     {
