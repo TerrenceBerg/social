@@ -25,8 +25,18 @@ class CacheTokenStorage implements TokenStorageInterface
 
     public function storeTokens(array $tokenData): void
     {
-        Cache::put('twitter_access_token', $tokenData['access_token'], now()->addSeconds($tokenData['expires_in']));
-        Cache::put('twitter_refresh_token', $tokenData['refresh_token'], now()->addDays(180));
-        Cache::put('twitter_token_expires_at', now()->addSeconds($tokenData['expires_in'])->timestamp);
+        $accessToken = $tokenData['access_token'] ?? null;
+        $refreshToken = $tokenData['refresh_token'] ?? null;
+        $expiresIn = $tokenData['expires_in'] ?? 3600;
+
+        if ($accessToken) {
+            Cache::put('twitter_access_token', $accessToken, now()->addSeconds($expiresIn));
+        }
+
+        if ($refreshToken) {
+            Cache::put('twitter_refresh_token', $refreshToken, now()->addDays(180));
+        }
+
+        Cache::put('twitter_token_expires_at', now()->addSeconds($expiresIn)->timestamp);
     }
 }
