@@ -39,9 +39,9 @@ class SocialServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        if (!$this->app->runningInConsole()) {
-            $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
-        }
+//        if (!$this->app->runningInConsole()) {
+//            $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
+//        }
 
         $this->publishes([
             __DIR__ . '/../config/social.php' => config_path('social.php'),
