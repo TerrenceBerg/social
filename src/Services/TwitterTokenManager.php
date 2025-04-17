@@ -13,6 +13,7 @@ class TwitterTokenManager
     public function storeInitialTokens(array $tokens): void
     {
         logger()->info('storeInitialTokens called with:', $tokens);
+        logger()->info('storeInitialTokens expected array, got: ' . gettype($tokens));
 
         if (!is_array($tokens)) {
             throw new \Exception('storeInitialTokens expected array, got: ' . gettype($tokens));
