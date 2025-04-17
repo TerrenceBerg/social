@@ -12,7 +12,7 @@ class TwitterTokenManager
 
     public function storeInitialTokens(array $tokens): void
     {
-
+        logger()->info('storeInitialTokens called with:', $tokens);
         $accessToken = $tokens['access_token'] ?? null;
         $refreshToken = $tokens['refresh_token'] ?? null;
 
