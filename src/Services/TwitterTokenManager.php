@@ -13,19 +13,25 @@ class TwitterTokenManager
     public function storeInitialTokens(array $tokens): void
     {
         logger()->info('storeInitialTokens called with:', $tokens);
+
+        if (!is_array($tokens)) {
+            throw new \Exception('storeInitialTokens expected array, got: ' . gettype($tokens));
+        }
+
+        if (!array_key_exists('expires_in', $tokens)) {
+            throw new \Exception('Missing "expires_in" in storeInitialTokens. Tokens: ' . json_encode($tokens));
+        }
+
         $accessToken = $tokens['access_token'] ?? null;
         $refreshToken = $tokens['refresh_token'] ?? null;
-
-        $expiresIn = $tokens['expires_in'] ?? 3600;
+        $expiresIn = $tokens['expires_in'];
         $expiresAt = now()->addSeconds($expiresIn);
-
 
         $this->storage->storeTokens([
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
             'expires_at' => $expiresAt,
         ]);
-
     }
     public function getAccessToken(): string
     {

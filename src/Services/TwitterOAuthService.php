@@ -77,6 +77,7 @@ class TwitterOAuthService
         }
 
         $tokens = $response->json();
+        logger()->info('Type of $tokens in getAccessToken: ' . gettype($tokens));
         logger()->info('Twitter token response:', $tokens);
         app(\Tuna976\Social\Services\TwitterTokenManager::class)->storeInitialTokens($tokens);
 
