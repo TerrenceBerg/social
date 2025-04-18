@@ -78,7 +78,7 @@ class TwitterOAuthService
 
         $tokens = $response->json();
         $user=$this->getUserProfile($tokens['access_token']);
-        app(\Tuna976\Social\Services\TwitterTokenManager::class)->storeInitialTokens($tokens,$user);
+        app(\Tuna976\Social\Services\TwitterTokenManager::class)->storeInitialTokens($tokens,$user,$verifier);
 
         return [
             'success' => true,
