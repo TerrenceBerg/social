@@ -29,7 +29,7 @@ class SocialManager
             SocialAuthToken::create([
                 'provider' => $this->provider,
                 'state' => $state,
-                'code_verifier' => $verifier,
+                'verifier' => $verifier,
             ]);
 
             $authUrl = $this->twitterOAuth->getAuthorizationUrl($state, $verifier);
@@ -47,7 +47,7 @@ class SocialManager
             ->firstOrFail();
 
         if ($this->provider === 'twitter') {
-            $verifier = $tokenRecord->code_verifier;
+            $verifier = $tokenRecord->verifier;
 
             $tokenData = $this->twitterOAuth->getAccessToken($code, $verifier);
 

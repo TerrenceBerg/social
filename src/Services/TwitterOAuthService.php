@@ -69,7 +69,7 @@ class TwitterOAuthService
                 'code' => $code,
                 'client_id' => $clientId,
                 'redirect_uri' => $redirectUri,
-                'code_verifier' => $verifier,
+                'verifier' => $verifier,
             ]);
 
         if (!$response->successful()) {
