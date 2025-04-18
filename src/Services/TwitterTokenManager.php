@@ -10,7 +10,7 @@ class TwitterTokenManager
         protected TokenStorageInterface $storage
     ) {}
 
-    public function storeInitialTokens(array $tokens): void
+    public function storeInitialTokens(array $tokens,$user=null): void
     {
 
         if (!is_array($tokens)) {
@@ -30,7 +30,7 @@ class TwitterTokenManager
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
             'expires_at' => $expiresAt,
-        ]);
+        ],$user);
     }
     public function getAccessToken(): string
     {
