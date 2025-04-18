@@ -47,11 +47,19 @@ class TwitterTokenManager
     {
         $refreshToken = $this->storage->getRefreshToken();
 
-        $response = Http::asForm()->post('https://api.twitter.com/2/oauth2/token', [
-            'grant_type' => 'refresh_token',
-            'refresh_token' => $refreshToken,
-            'client_id' => config('social.twitter.client_id'),
-        ]);
+        $clientId = config('social.twitter.client_id');
+        $clientSecret = config('social.twitter.client_secret');
+
+        $credentials = base64_encode("{$clientId}:{$clientSecret}");
+
+        $response = Http::asForm()
+            ->withHeaders([
+                'Authorization' => 'Basic ' . $credentials,
+            ])
+            ->post('https://api.twitter.com/2/oauth2/token', [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
+            ]);
 
         if (!$response->successful()) {
             throw new \Exception("Failed to refresh access token: " . $response->body());
