@@ -5,6 +5,7 @@ namespace Tuna976\Social;
 use Illuminate\Support\ServiceProvider;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 use Tuna976\Social\Services\CacheTokenStorage;
+use Tuna976\Social\Services\DatabaseTokenStorage;
 use Tuna976\Social\Services\TwitterOAuthService;
 use Tuna976\Social\Services\TwitterPostService;
 use Tuna976\Social\Services\TwitterTokenManager;
@@ -15,14 +16,21 @@ class SocialServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/social.php', 'social');
 
+        // Publish migrations
+        $this->publishes([
+            __DIR__ . '/Database/migrations' => database_path('migrations'),
+        ], 'social-migrations');
 
+        $this->loadMigrationsFrom(__DIR__ . '/Database/migrations');
         // Bind interface to implementation
-        $this->app->singleton(TokenStorageInterface::class, CacheTokenStorage::class);
+//        $this->app->singleton(TokenStorageInterface::class, CacheTokenStorage::class);
 
         // TokenManager depends on TokenStorageInterface
         $this->app->singleton(TwitterTokenManager::class, function ($app) {
             return new TwitterTokenManager($app->make(TokenStorageInterface::class));
         });
+
+        $this->app->singleton(TokenStorageInterface::class, DatabaseTokenStorage::class);
 
         // OAuth service (if it needs dependencies, inject here)
         $this->app->singleton(TwitterOAuthService::class, function ($app) {
