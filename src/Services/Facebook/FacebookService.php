@@ -17,7 +17,7 @@ class FacebookService
         $clientId = config('social.facebook.client_id');
         $redirectUri = config('social.facebook.redirect');
 
-        return 'https://www.facebook.com/v18.0/dialog/oauth?' . http_build_query([
+        return 'https://www.facebook.com/v22.0/dialog/oauth?' . http_build_query([
                 'client_id' => $clientId,
                 'redirect_uri' => $redirectUri,
                 'state' => $state,
@@ -32,7 +32,7 @@ class FacebookService
         $clientSecret = config('social.facebook.client_secret');
         $redirectUri = config('social.facebook.redirect');
 
-        $response = Http::get('https://graph.facebook.com/v18.0/oauth/access_token', [
+        $response = Http::get('https://graph.facebook.com/v22.0/oauth/access_token', [
             'client_id' => $clientId,
             'redirect_uri' => $redirectUri,
             'client_secret' => $clientSecret,
@@ -46,7 +46,7 @@ class FacebookService
         $data = $response->json();
 
         // Optional: Get long-lived token
-        $longLivedTokenResponse = Http::get('https://graph.facebook.com/v18.0/oauth/access_token', [
+        $longLivedTokenResponse = Http::get('https://graph.facebook.com/v22.0/oauth/access_token', [
             'grant_type' => 'fb_exchange_token',
             'client_id' => $clientId,
             'client_secret' => $clientSecret,

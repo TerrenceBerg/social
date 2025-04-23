@@ -50,4 +50,23 @@ class FacebookOAuthService
 
         return $response->json();
     }
+
+    public function getUserPages(string $accessToken): array
+    {
+        $response = Http::get('https://graph.facebook.com/v22.0/me/accounts', [
+            'access_token' => $accessToken,
+        ]);
+
+        return $response->json()['data'] ?? [];
+    }
+
+    public function postToPage(string $pageAccessToken, string $message): array
+    {
+        $response = Http::post('https://graph.facebook.com/v22.0/me/feed', [
+            'message' => $message,
+            'access_token' => $pageAccessToken,
+        ]);
+
+        return $response->json();
+    }
 }

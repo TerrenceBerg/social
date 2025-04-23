@@ -82,6 +82,7 @@ class SocialManager
     {
         $tokens = $this->facebookOAuth->getAccessToken($code);
         $user = $this->facebookOAuth->getUserProfile($tokens['access_token']);
+        $pages = $this->facebookOAuth->getUserPages($tokens['access_token']);
 
         $record->update([
             'access_token' => $tokens['access_token'] ?? null,
@@ -92,6 +93,7 @@ class SocialManager
         return [
             'user' => $user,
             'tokens' => $tokens,
+            'pages' => $pages,
         ];
     }
 }
