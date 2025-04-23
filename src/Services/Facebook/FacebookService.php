@@ -63,26 +63,40 @@ class FacebookService
         ];
     }
 
-    public function postToPage(string $pageId, string $message): array
+//    public function postToPage(string $pageId, string $message): array
+//    {
+//        $accessToken = $this->storage->getAccessToken();
+//
+//        // Get page access token
+//        $response = Http::get("https://graph.facebook.com/{$pageId}", [
+//            'fields' => 'access_token',
+//            'access_token' => $accessToken,
+//        ]);
+//
+//        if (!$response->successful()) {
+//            throw new \Exception('Failed to get page access token: ' . $response->body());
+//        }
+//
+//        $pageToken = $response->json()['access_token'];
+//
+//        // Post the message
+//        $postResponse = Http::post("https://graph.facebook.com/{$pageId}/feed", [
+//            'message' => $message,
+//            'access_token' => $pageToken,
+//        ]);
+//
+//        if (!$postResponse->successful()) {
+//            throw new \Exception('Failed to post to Facebook page: ' . $postResponse->body());
+//        }
+//
+//        return $postResponse->json();
+//    }
+    public function postToPage(string $pageId, string $pageAccessToken, string $message): array
     {
-        $accessToken = $this->storage->getAccessToken();
-
-        // Get page access token
-        $response = Http::get("https://graph.facebook.com/{$pageId}", [
-            'fields' => 'access_token',
-            'access_token' => $accessToken,
-        ]);
-
-        if (!$response->successful()) {
-            throw new \Exception('Failed to get page access token: ' . $response->body());
-        }
-
-        $pageToken = $response->json()['access_token'];
-
         // Post the message
         $postResponse = Http::post("https://graph.facebook.com/{$pageId}/feed", [
             'message' => $message,
-            'access_token' => $pageToken,
+            'access_token' => $pageAccessToken,
         ]);
 
         if (!$postResponse->successful()) {
