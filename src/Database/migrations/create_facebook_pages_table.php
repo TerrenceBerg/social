@@ -11,7 +11,7 @@ return new class extends Migration {
         Schema::create('facebook_pages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
-            $table->text('page_id')->unique();
+            $table->text('page_id');
             $table->text('name');
             $table->text('access_token');
             $table->timestamps();
