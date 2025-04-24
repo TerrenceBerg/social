@@ -20,12 +20,18 @@ return [
         'client_secret' => env('FACEBOOK_APP_SECRET'),
         'redirect' => env('FACEBOOK_REDIRECT_URI'),
         'scopes' => [
+            'public_profile',
+            'email',
             'pages_show_list',
             'pages_read_engagement',
             'pages_manage_posts',
             'pages_read_user_content',
+            'pages_manage_engagement',
+            'pages_manage_metadata',
+            'groups_access_member_info',
+            'publish_to_groups',
             'instagram_basic',
-            'instagram_content_publish'
+            'instagram_content_publish',
         ],
     ]
 ];
