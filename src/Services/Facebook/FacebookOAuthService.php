@@ -60,12 +60,35 @@ class FacebookOAuthService
         return $response->json()['data'] ?? [];
     }
 
+    public function getUserGroups(string $accessToken): array
+    {
+        $response = Http::get('https://graph.facebook.com/v22.0/me/groups', [
+            'access_token' => $accessToken,
+        ]);
+
+        return $response->json()['data'] ?? [];
+    }
+
     public function postToPage(string $pageAccessToken, string $message): array
     {
         $response = Http::post('https://graph.facebook.com/v22.0/me/feed', [
             'message' => $message,
             'access_token' => $pageAccessToken,
         ]);
+
+        return $response->json();
+    }
+
+    public function postToGroup(string $groupId, string $userAccessToken, string $message): array
+    {
+        $response = Http::post("https://graph.facebook.com/{$groupId}/feed", [
+            'message' => $message,
+            'access_token' => $userAccessToken,
+        ]);
+
+        if (!$response->successful()) {
+            throw new \Exception('Failed to post to Facebook group: ' . $response->body());
+        }
 
         return $response->json();
     }
