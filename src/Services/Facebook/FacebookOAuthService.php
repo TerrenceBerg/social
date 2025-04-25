@@ -55,6 +55,7 @@ class FacebookOAuthService
     {
         $response = Http::get('https://graph.facebook.com/v22.0/me/accounts', [
             'access_token' => $accessToken,
+            'limit' => 100,
         ]);
 
         return $response->json()['data'] ?? [];
