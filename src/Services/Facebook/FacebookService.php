@@ -91,13 +91,24 @@ class FacebookService
 //
 //        return $postResponse->json();
 //    }
-    public function postToPage(string $pageId, string $pageAccessToken, string $message): array
+    public function postToPage(string $pageId, string $pageAccessToken, string $message,string $link=null): array
     {
-        // Post the message
-        $postResponse = Http::post("https://graph.facebook.com/{$pageId}/feed", [
-            'message' => $message,
-            'access_token' => $pageAccessToken,
-        ]);
+
+        if ($link) {
+            // Post the message
+            $postResponse = Http::post("https://graph.facebook.com/{$pageId}/feed", [
+                'message' => $message,
+                'link' => $link,
+                'access_token' => $pageAccessToken,
+            ]);
+        }
+        else{
+            // Post the message
+            $postResponse = Http::post("https://graph.facebook.com/{$pageId}/feed", [
+                'message' => $message,
+                'access_token' => $pageAccessToken,
+            ]);
+        }
 
         if (!$postResponse->successful()) {
             throw new \Exception('Failed to post to Facebook page: ' . $postResponse->body());
