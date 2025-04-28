@@ -3,13 +3,25 @@
 
 namespace Tuna976\Social\Services;
 
+use Illuminate\Support\Facades\Auth;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 use Tuna976\Social\Models\SocialAuthToken;
 
 
 class DatabaseTokenStorage implements TokenStorageInterface
 {
-    protected string $provider = 'twitter';
+
+    protected string $provider;
+
+    public function __construct(string $provider = 'twitter')
+    {
+        $this->provider = $provider;
+    }
+
+    public function setProvider(string $provider): void
+    {
+        $this->provider = $provider;
+    }
 
     public function getAccessToken(): ?string
     {
@@ -46,7 +58,7 @@ class DatabaseTokenStorage implements TokenStorageInterface
     protected function getTokenRecord(): ?SocialAuthToken
     {
         return SocialAuthToken::where('provider', $this->provider)
-            ->whereNull('user_id') // Or replace with auth-based logic
+            ->whereNull('user_id')
             ->latest()
             ->first();
     }

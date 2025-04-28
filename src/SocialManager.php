@@ -4,7 +4,9 @@ namespace Tuna976\Social;
 use Illuminate\Support\Str;
 use Tuna976\Social\Models\SocialAuthToken;
 use Tuna976\Social\Services\Facebook\FacebookOAuthService;
+use Tuna976\Social\Services\Instagram\InstagramOAuthService;
 use Tuna976\Social\Services\TwitterOAuthService;
+
 
 class SocialManager
 {
@@ -13,6 +15,7 @@ class SocialManager
     public function __construct(
         protected TwitterOAuthService $twitterOAuth,
         protected FacebookOAuthService $facebookOAuth,
+        protected InstagramOAuthService $instagramService,
     ) {}
 
     public function withProvider(string $provider): self
@@ -44,6 +47,10 @@ class SocialManager
             $authUrl = $this->facebookOAuth->getAuthorizationUrl($state);
             return redirect($authUrl);
         }
+        if ($this->provider === 'instagram') {
+            $authUrl = $this->instagramService->getAuthorizationUrl($state, '');
+            return redirect($authUrl);
+        }
 
         throw new \Exception("Provider [{$this->provider}] is not supported.");
     }
@@ -57,6 +64,7 @@ class SocialManager
         return match ($this->provider) {
             'twitter' => $this->handleTwitter($record, $code),
             'facebook' => $this->handleFacebook($record, $code),
+            'instagram' => $this->handleInstagram($record, $code),
             default => throw new \Exception("Provider [{$this->provider}] is not supported."),
         };
     }
@@ -96,4 +104,21 @@ class SocialManager
             'pages' => $pages,
         ];
     }
+    protected function handleInstagram($record, string $code): array
+    {
+        $tokens = $this->instagramService->getAccessToken($code);
+        $tokens = $this->instagramService->getUserProfile($tokens['access_token']);
+
+        $record->update([
+            'access_token' => $tokens['access_token'] ?? null,
+            'expires_at' => now()->addSeconds($tokens['expires_in'] ?? 3600),
+            'user_id' => $user['id'] ?? null,
+        ]);
+
+        return [
+            'user' => $user,
+            'tokens' => $tokens,
+        ];
+    }
+
 }

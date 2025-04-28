@@ -10,4 +10,7 @@ interface TokenStorageInterface
     public function getExpiresAt(): ?int;
 
     public function storeTokens(array $tokenData): void;
+
+    public function setProvider(string $provider): void;
+
 }
