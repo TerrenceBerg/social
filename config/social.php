@@ -33,5 +33,19 @@ return [
             'instagram_basic',
             'instagram_content_publish',
         ],
+    ],
+    'instagram' => [
+        'client_id' => env('INSTAGRAM_APP_ID'),
+        'client_secret' => env('INSTAGRAM_APP_SECRET'),
+        'redirect' => env('INSTAGRAM_REDIRECT_URI'),
+        'scopes' => [
+            'user_profile',
+            'ads_management',
+            'business_management',
+            'user_media',
+            'instagram_basic',
+            'instagram_content_publish',
+            'pages_read_engagement',
+        ],
     ]
 ];
