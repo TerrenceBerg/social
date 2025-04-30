@@ -115,6 +115,26 @@ class InstagramBussinessService
         return $publishMedia->json();
     }
 
+    public function postReel(string $videoUrl, ?string $caption = null): array
+    {
+        $accessToken = $this->getAccessToken();
+
+        $createReel = Http::post("https://graph.facebook.com/v22.0/{$this->instagramAccountId}/media", [
+            'media_type'   => 'REELS',
+            'video_url'    => $videoUrl,
+            'caption'      => $caption ?? '',
+            'access_token' => $accessToken,
+        ]);
+
+        if (!$createReel->successful()) {
+            throw new \Exception('Failed to create Instagram Reel: ' . $createReel->body());
+        }
+
+        $creationId = $createReel->json()['id'];
+
+        return $this->publishMedia($creationId);
+    }
+
     protected function determineMediaType(string $url): string
     {
         $extension = strtolower(pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION));
