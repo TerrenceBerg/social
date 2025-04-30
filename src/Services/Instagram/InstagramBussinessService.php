@@ -132,9 +132,12 @@ class InstagramBussinessService
 
         $creationId = $createReel->json()['id'];
 
+        if (!$this->waitForMediaToBeReady($creationId, $accessToken)) {
+            throw new \Exception('Media not ready for publishing after waiting.');
+        }
+
         return $this->publishMedia($creationId);
     }
-
     protected function determineMediaType(string $url): string
     {
         $extension = strtolower(pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION));
@@ -144,5 +147,26 @@ class InstagramBussinessService
     protected function getAccessToken(): string
     {
         return $this->pageAccessToken;
+    }
+    protected function waitForMediaToBeReady(string $creationId, string $accessToken, int $maxAttempts = 10, int $sleepSeconds = 3): bool
+    {
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            sleep($sleepSeconds);
+
+            $response = Http::get("https://graph.facebook.com/v22.0/{$creationId}?fields=status_code", [
+                'access_token' => $accessToken,
+            ]);
+
+            if ($response->successful()) {
+                $status = $response->json()['status_code'] ?? null;
+                if ($status === 'FINISHED') {
+                    return true;
+                }
+            } else {
+                \Log::warning("Failed to get media status for ID {$creationId}: " . $response->body());
+            }
+        }
+
+        return false;
     }
 }
