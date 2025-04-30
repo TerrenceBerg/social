@@ -133,7 +133,7 @@ class InstagramBussinessService
         $creationId = $createReel->json()['id'];
 
         if (!$this->waitForMediaToBeReady($creationId, $accessToken)) {
-            throw new \Exception('Media not ready for publishing after waiting.');
+            throw new \Exception('Media not ready for publishing after polling.');
         }
 
         return $this->publishMedia($creationId);
@@ -148,7 +148,7 @@ class InstagramBussinessService
     {
         return $this->pageAccessToken;
     }
-    protected function waitForMediaToBeReady(string $creationId, string $accessToken, int $maxAttempts = 10, int $sleepSeconds = 3): bool
+    protected function waitForMediaToBeReady(string $creationId, string $accessToken, int $maxAttempts = 15, int $sleepSeconds = 4): bool
     {
         for ($i = 0; $i < $maxAttempts; $i++) {
             sleep($sleepSeconds);
@@ -159,11 +159,17 @@ class InstagramBussinessService
 
             if ($response->successful()) {
                 $status = $response->json()['status_code'] ?? null;
+                \Log::info("Media status for ID {$creationId}: " . $status);
+
                 if ($status === 'FINISHED') {
                     return true;
                 }
+
+                if ($status === 'ERROR') {
+                    throw new \Exception("Instagram media processing failed: ERROR");
+                }
             } else {
-                \Log::warning("Failed to get media status for ID {$creationId}: " . $response->body());
+                \Log::warning("Failed to fetch media status: " . $response->body());
             }
         }
 
