@@ -132,9 +132,7 @@ class InstagramBussinessService
 
         $creationId = $createReel->json()['id'];
 
-        if (!$this->waitForMediaToBeReady($creationId, $accessToken)) {
-            throw new \Exception('Media not ready for publishing after polling.');
-        }
+        sleep(30);
 
         return $this->publishMedia($creationId);
     }
