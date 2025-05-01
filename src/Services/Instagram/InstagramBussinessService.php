@@ -3,10 +3,12 @@
 namespace Tuna976\Social\Services\Instagram;
 
 use Illuminate\Support\Facades\Http;
+use Tuna976\Social\Concerns\LogsToChannel;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 
 class InstagramBussinessService
 {
+    use LogsToChannel;
     public function __construct(
         protected string $instagramAccountId,
         protected string $pageAccessToken,
@@ -48,7 +50,9 @@ class InstagramBussinessService
             ]);
 
             if (!$createChild->successful()) {
-                throw new \Exception('Failed to create carousel child media: ' . $createChild->body());
+                $errorMessage = 'Failed to create carousel child media: ' . $createChild->body();
+                $this->logError($errorMessage);
+                throw new \Exception($errorMessage);
             }
 
             $children[] = $createChild->json()['id'];
@@ -63,7 +67,10 @@ class InstagramBussinessService
         ]);
 
         if (!$createCarousel->successful()) {
-            throw new \Exception('Failed to create carousel container: ' . $createCarousel->body());
+            $errorMessage = 'Failed to create carousel container: ' . $createCarousel->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
+
         }
 
         $creationId = $createCarousel->json()['id'];
@@ -91,7 +98,9 @@ class InstagramBussinessService
         ]));
 
         if (!$createMedia->successful()) {
-            throw new \Exception('Failed to create Instagram media: ' . $createMedia->body());
+            $errorMessage = 'Failed to create Instagram media: ' . $createMedia->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         $creationId = $createMedia->json()['id'];
@@ -109,7 +118,9 @@ class InstagramBussinessService
         ]);
 
         if (!$publishMedia->successful()) {
-            throw new \Exception('Failed to publish Instagram media: ' . $publishMedia->body());
+            $errorMessage = 'Failed to publish Instagram media: ' . $publishMedia->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         return $publishMedia->json();
@@ -127,7 +138,9 @@ class InstagramBussinessService
         ]);
 
         if (!$createReel->successful()) {
-            throw new \Exception('Failed to create Instagram Reel: ' . $createReel->body());
+            $errorMessage = 'Failed to create Instagram Reel: ' . $createReel->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         $creationId = $createReel->json()['id'];
@@ -157,17 +170,23 @@ class InstagramBussinessService
 
             if ($response->successful()) {
                 $status = $response->json()['status_code'] ?? null;
-                \Log::info("Media status for ID {$creationId}: " . $status);
+
+                $errorMessage = "Media status for ID {$creationId}: " . $status;
+                $this->logInfo($errorMessage);
 
                 if ($status === 'FINISHED') {
                     return true;
                 }
 
                 if ($status === 'ERROR') {
-                    throw new \Exception("Instagram media processing failed: ERROR");
+                    $errorMessage = "Instagram media processing failed: ERROR";
+                    $this->logError($errorMessage);
+                    throw new \Exception($errorMessage);
                 }
             } else {
-                \Log::warning("Failed to fetch media status: " . $response->body());
+                $errorMessage = "Failed to fetch media status: " . $response->body();
+                $this->logError($errorMessage);
+                throw new \Exception($errorMessage);
             }
         }
 

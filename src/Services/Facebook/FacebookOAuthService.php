@@ -3,9 +3,11 @@
 namespace Tuna976\Social\Services\Facebook;
 
 use Illuminate\Support\Facades\Http;
+use Tuna976\Social\Concerns\LogsToChannel;
 
 class FacebookOAuthService
 {
+    use LogsToChannel;
     protected string $clientId;
     protected string $clientSecret;
     protected string $redirectUri;
@@ -88,7 +90,10 @@ class FacebookOAuthService
         ]);
 
         if (!$response->successful()) {
-            throw new \Exception('Failed to post to Facebook group: ' . $response->body());
+            $errorMessage = 'Failed to post to Facebook group: ' . $response->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
+
         }
 
         return $response->json();

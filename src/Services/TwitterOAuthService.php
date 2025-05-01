@@ -4,9 +4,12 @@ namespace Tuna976\Social\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Tuna976\Social\Concerns\LogsToChannel;
 
 class TwitterOAuthService
 {
+    use LogsToChannel;
+
     protected string $clientId;
     protected string $clientSecret;
     protected string $redirectUri;
@@ -73,12 +76,15 @@ class TwitterOAuthService
             ]);
 
         if (!$response->successful()) {
-            throw new \Exception('Failed to retrieve access token: ' . $response->body());
+            $errorMessage = 'Failed to retrieve access token: ' . $response->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
+
         }
 
         $tokens = $response->json();
-        $user=$this->getUserProfile($tokens['access_token']);
-        app(\Tuna976\Social\Services\TwitterTokenManager::class)->storeInitialTokens($tokens,$user,$verifier);
+        $user = $this->getUserProfile($tokens['access_token']);
+        app(\Tuna976\Social\Services\TwitterTokenManager::class)->storeInitialTokens($tokens, $user, $verifier);
 
         return [
             'success' => true,
@@ -88,6 +94,7 @@ class TwitterOAuthService
         ];
 //        return $response->json();
     }
+
     public function refreshToken(string $refreshToken): array
     {
         $response = Http::asForm()->post($this->tokenUrl, [
@@ -97,7 +104,9 @@ class TwitterOAuthService
         ]);
 
         if ($response->failed()) {
-            throw new \Exception('Failed to refresh access token: ' . $response->body());
+            $errorMessage = 'Failed to refresh access token: ' . $response->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         return $response->json();
@@ -109,7 +118,9 @@ class TwitterOAuthService
             ->get("{$this->baseUrl}/2/users/me");
 
         if ($response->failed()) {
-            throw new \Exception('Failed to fetch user profile: ' . $response->body());
+            $errorMessage = 'Failed to fetch user profile: ' . $response->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         return $response->json();

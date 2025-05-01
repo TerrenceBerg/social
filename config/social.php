@@ -47,5 +47,6 @@ return [
             'instagram_content_publish',
             'pages_read_engagement',
         ],
-    ]
+    ],
+    'log_channel' => env('SOCIAL_MEDIA_LOG_CHANNEL', 'default'),
 ];

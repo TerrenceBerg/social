@@ -3,10 +3,12 @@
 namespace Tuna976\Social\Services\Instagram;
 
 use Illuminate\Support\Facades\Http;
+use Tuna976\Social\Concerns\LogsToChannel;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 
 class InstagramOAuthService
 {
+    use LogsToChannel;
     protected string $clientId;
     protected string $clientSecret;
     protected string $redirectUri;
@@ -46,7 +48,10 @@ class InstagramOAuthService
         ]);
 
         if (!$response->successful()) {
-            throw new \Exception('Failed to get Instagram access token: ' . $response->body());
+            $errorMessage = 'Failed to get Instagram access token: ' . $response->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
+
         }
 
         $data = $response->json();

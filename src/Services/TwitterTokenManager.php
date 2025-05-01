@@ -2,10 +2,13 @@
 namespace Tuna976\Social\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Tuna976\Social\Concerns\LogsToChannel;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 
 class TwitterTokenManager
 {
+    use LogsToChannel;
     public function __construct(
         protected TokenStorageInterface $storage
     ) {}
@@ -14,11 +17,15 @@ class TwitterTokenManager
     {
 
         if (!is_array($tokens)) {
-            throw new \Exception('storeInitialTokens expected array, got: ' . gettype($tokens));
+            $errorMessage = 'storeInitialTokens expected array, got: ' . gettype($tokens);
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         if (!array_key_exists('expires_in', $tokens)) {
-            throw new \Exception('Missing "expires_in" in storeInitialTokens. Tokens: ' . json_encode($tokens));
+            $errorMessage = 'Missing "expires_in" in storeInitialTokens. Tokens: ' . json_encode($tokens);
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         $accessToken = $tokens['access_token'] ?? null;
@@ -62,7 +69,9 @@ class TwitterTokenManager
             ]);
 
         if (!$response->successful()) {
-            throw new \Exception("Failed to refresh access token: " . $response->body());
+            $errorMessage = "Failed to refresh access token: " . $response->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         $this->storage->storeTokens($response->json());

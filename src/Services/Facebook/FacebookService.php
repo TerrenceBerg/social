@@ -3,10 +3,12 @@
 namespace Tuna976\Social\Services\Facebook;
 
 use Illuminate\Support\Facades\Http;
+use Tuna976\Social\Concerns\LogsToChannel;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 
 class FacebookService
 {
+    use LogsToChannel;
     public function __construct(
         protected TokenStorageInterface $storage,
         protected string $provider = 'facebook'
@@ -40,7 +42,9 @@ class FacebookService
         ]);
 
         if (!$response->successful()) {
-            throw new \Exception('Failed to get Facebook access token: ' . $response->body());
+            $errorMessage = 'Failed to get Facebook access token: ' . $response->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         $data = $response->json();
@@ -111,7 +115,9 @@ class FacebookService
         }
 
         if (!$postResponse->successful()) {
-            throw new \Exception('Failed to post to Facebook page: ' . $postResponse->body());
+            $errorMessage = 'Failed to post to Facebook page: ' . $postResponse->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         return $postResponse->json();

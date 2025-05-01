@@ -2,6 +2,7 @@
 namespace Tuna976\Social;
 
 use Illuminate\Support\Str;
+use Tuna976\Social\Concerns\LogsToChannel;
 use Tuna976\Social\Models\SocialAuthToken;
 use Tuna976\Social\Services\Facebook\FacebookOAuthService;
 use Tuna976\Social\Services\Instagram\InstagramOAuthService;
@@ -10,6 +11,7 @@ use Tuna976\Social\Services\TwitterOAuthService;
 
 class SocialManager
 {
+    use LogsToChannel;
     protected string $provider;
 
     public function __construct(
@@ -51,8 +53,9 @@ class SocialManager
             $authUrl = $this->instagramService->getAuthorizationUrl($state, '');
             return redirect($authUrl);
         }
-
-        throw new \Exception("Provider [{$this->provider}] is not supported.");
+        $errorMessage = "Provider [{$this->provider}] is not supported.";
+        $this->logError($errorMessage);
+        throw new \Exception($errorMessage);
     }
 
     public function handleCallback(string $code, string $state): array

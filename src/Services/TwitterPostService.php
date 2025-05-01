@@ -1,9 +1,11 @@
 <?php
 namespace Tuna976\Social\Services;
 use Illuminate\Support\Facades\Http;
+use Tuna976\Social\Concerns\LogsToChannel;
 
 class TwitterPostService
 {
+    use LogsToChannel;
     public function __construct(
         protected TwitterTokenManager $tokenManager
     ) {}
@@ -18,7 +20,9 @@ class TwitterPostService
             ]);
 
         if (!$response->successful()) {
-            throw new \Exception("Tweet failed: " . $response->body());
+            $errorMessage = "Tweet failed: " . $response->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         return $response->json();
@@ -41,7 +45,9 @@ class TwitterPostService
             ]);
 
         if (!$response->successful()) {
-            throw new \Exception("Tweet with media failed: " . $response->body());
+            $errorMessage ="Tweet with media failed: " . $response->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         return $response->json();
@@ -52,7 +58,9 @@ class TwitterPostService
         $accessToken = $this->tokenManager->getAccessToken();
 
         if (!file_exists($mediaPath)) {
-            throw new \Exception("Media file not found: {$mediaPath}");
+            $errorMessage = "Media file not found Twitter: {$mediaPath}";
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         $mediaContent = file_get_contents($mediaPath);
@@ -64,7 +72,9 @@ class TwitterPostService
             ->post('https://upload.twitter.com/1.1/media/upload.json');
 
         if (!$response->successful()) {
-            throw new \Exception("Media upload failed: " . $response->body());
+            $errorMessage = "Media upload failed for Twitter: " . $response->body();
+            $this->logError($errorMessage);
+            throw new \Exception($errorMessage);
         }
 
         $responseData = $response->json();
