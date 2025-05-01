@@ -40,17 +40,18 @@ class DatabaseTokenStorage implements TokenStorageInterface
 
     public function storeTokens(array $tokenData,$user=null,$verifier=null): void
     {
-        $user_id = $user?$user['data']['id']:null;
-        $token = SocialAuthToken::firstOrNew([
-            'provider' => $this->provider,
-            'verifier' => $verifier ?? null,
-        ]);
+        $user_id = $user ? $user['data']['id'] : null;
 
-        $token->access_token = $tokenData['access_token'] ?? $token->access_token;
-        $token->refresh_token = $tokenData['refresh_token'] ?? $token->refresh_token;
+
+        SocialAuthToken::where('provider', $this->provider)->delete();
+
+        $token = new SocialAuthToken();
+        $token->provider = $this->provider;
+        $token->access_token = $tokenData['access_token'] ?? null;
+        $token->refresh_token = $tokenData['refresh_token'] ?? null;
         $token->expires_at = now()->addSeconds($tokenData['expires_in'] ?? 3600);
-        $token->extra_data =$user_id ? json_encode($user) : null;
-        $token->user_id =$user_id ?? null;
+        $token->extra_data = $user_id ? json_encode($user) : null;
+        $token->user_id = $user_id;
 
         $token->save();
     }
@@ -58,7 +59,6 @@ class DatabaseTokenStorage implements TokenStorageInterface
     protected function getTokenRecord(): ?SocialAuthToken
     {
         return SocialAuthToken::where('provider', $this->provider)
-            ->whereNull('user_id')
             ->latest()
             ->first();
     }

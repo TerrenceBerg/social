@@ -61,7 +61,6 @@ class SocialManager
     public function handleCallback(string $code, string $state): array
     {
         $record = SocialAuthToken::where('provider', $this->provider)
-            ->where('state', $state)
             ->firstOrFail();
 
         return match ($this->provider) {
