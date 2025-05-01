@@ -3,6 +3,7 @@
 
 namespace Tuna976\Social\Services;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 use Tuna976\Social\Models\SocialAuthToken;
@@ -38,20 +39,25 @@ class DatabaseTokenStorage implements TokenStorageInterface
         return optional($this->getTokenRecord()?->expires_at)->timestamp;
     }
 
-    public function storeTokens(array $tokenData,$user=null,$verifier=null): void
+
+    public function storeTokens(array $tokenData, $user = null, $verifier = null): void
     {
-        $user_id = $user ? $user['data']['id'] : null;
+        $token = SocialAuthToken::firstOrNew([
+            'provider' => $this->provider,
+        ]);
 
+        $token->access_token = $tokenData['access_token'] ?? $token->access_token;
+        $token->refresh_token = $tokenData['refresh_token'] ?? $token->refresh_token;
 
-        SocialAuthToken::where('provider', $this->provider)->delete();
+        if (isset($tokenData['expires_in'])) {
+            $token->expires_at = Carbon::now()->addSeconds($tokenData['expires_in']);
+        } elseif (isset($tokenData['expires_at'])) {
+            $token->expires_at = Carbon::createFromTimestamp($tokenData['expires_at']);
+        }
 
-        $token = new SocialAuthToken();
-        $token->provider = $this->provider;
-        $token->access_token = $tokenData['access_token'] ?? null;
-        $token->refresh_token = $tokenData['refresh_token'] ?? null;
-        $token->expires_at = now()->addSeconds($tokenData['expires_in'] ?? 3600);
-        $token->extra_data = $user_id ? json_encode($user) : null;
-        $token->user_id = $user_id;
+        $token->verifier = $verifier ?? $token->verifier;
+        $token->extra_data = $user ? json_encode($user) : null;
+        $token->user_id = $user['data']['id'] ?? null;
 
         $token->save();
     }
