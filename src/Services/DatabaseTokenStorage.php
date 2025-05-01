@@ -5,6 +5,7 @@ namespace Tuna976\Social\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Tuna976\Social\Concerns\LogsToChannel;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 use Tuna976\Social\Models\SocialAuthToken;
 
@@ -12,6 +13,7 @@ use Tuna976\Social\Models\SocialAuthToken;
 class DatabaseTokenStorage implements TokenStorageInterface
 {
 
+    use LogsToChannel;
     protected string $provider;
 
     public function __construct(string $provider = 'twitter')
@@ -42,24 +44,37 @@ class DatabaseTokenStorage implements TokenStorageInterface
 
     public function storeTokens(array $tokenData, $user = null, $verifier = null): void
     {
-        $token = SocialAuthToken::firstOrNew([
-            'provider' => $this->provider,
-        ]);
+        try {
+            $token = SocialAuthToken::firstOrNew([
+                'provider' => $this->provider,
+            ]);
 
-        $token->access_token = $tokenData['access_token'] ?? $token->access_token;
-        $token->refresh_token = $tokenData['refresh_token'] ?? $token->refresh_token;
+            $token->access_token = $tokenData['access_token'] ?? $token->access_token;
+            $token->refresh_token = $tokenData['refresh_token'] ?? $token->refresh_token;
+            
+            if (isset($tokenData['expires_in'])) {
+                $token->expires_at = Carbon::now()->addSeconds((int)$tokenData['expires_in']);
+            } elseif (isset($tokenData['expires_at'])) {
+                $timestamp = $tokenData['expires_at'];
+                if (is_numeric($timestamp)) {
+                    $token->expires_at = Carbon::createFromTimestamp((int)$timestamp);
+                } else {
+                    throw new \Exception("Invalid 'expires_at' format: $timestamp");
+                }
+            }
 
-        if (isset($tokenData['expires_in'])) {
-            $token->expires_at = Carbon::now()->addSeconds($tokenData['expires_in']);
-        } elseif (isset($tokenData['expires_at'])) {
-            $token->expires_at = Carbon::createFromTimestamp($tokenData['expires_at']);
+            $token->verifier = $verifier ?? $token->verifier;
+            $token->extra_data = $user ? json_encode($user) : null;
+            $token->user_id = $user['data']['id'] ?? null;
+
+            $token->save();
+        } catch (\Exception $e) {
+           $this->logError('Failed to store tokens: ' . $e->getMessage(), [
+                'provider' => $this->provider,
+                'tokenData' => $tokenData,
+            ]);
+            throw $e; // or handle it differently if you want to suppress
         }
-
-        $token->verifier = $verifier ?? $token->verifier;
-        $token->extra_data = $user ? json_encode($user) : null;
-        $token->user_id = $user['data']['id'] ?? null;
-
-        $token->save();
     }
 
     protected function getTokenRecord(): ?SocialAuthToken
