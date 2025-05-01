@@ -1,6 +1,7 @@
 <?php
 namespace Tuna976\Social;
 
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Tuna976\Social\Concerns\LogsToChannel;
 use Tuna976\Social\Models\SocialAuthToken;
@@ -73,15 +74,18 @@ class SocialManager
 
     protected function handleTwitter($record, string $code): array
     {
+        // Get the access token data
         $tokenData = $this->twitterOAuth->getAccessToken($code, $record->verifier);
 
+        // Update the record with the new access token, refresh token, and expiration time
         $record->update([
             'access_token' => $tokenData['tokens']['access_token'] ?? null,
             'refresh_token' => $tokenData['tokens']['refresh_token'] ?? null,
-            'expires_at' => now()->addSeconds($tokenData['tokens']['expires_in'] ?? 3600),
+            'expires_at' => Carbon::now()->addSeconds($tokenData['tokens']['expires_in'] ?? 3600),
             'user_id' => $tokenData['user']['id'] ?? null,
         ]);
 
+        // Return the user and tokens information
         return [
             'user' => $tokenData['user'],
             'tokens' => $tokenData['tokens'],
@@ -96,7 +100,7 @@ class SocialManager
 
         $record->update([
             'access_token' => $tokens['access_token'] ?? null,
-            'expires_at' => now()->addSeconds($tokens['expires_in'] ?? 3600),
+            'expires_at' => Carbon::now()->addSeconds($tokens['expires_in'] ?? 3600),
             'user_id' => $user['id'] ?? null,
         ]);
 
