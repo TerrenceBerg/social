@@ -99,7 +99,7 @@ class TwitterOAuthService
     {
         $clientId = config('social.twitter.client_id');
         $clientSecret = config('social.twitter.client_secret');
-        
+
         $response = Http::asForm()
             ->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode("$clientId:$clientSecret"),
@@ -115,6 +115,8 @@ class TwitterOAuthService
             throw new \Exception($errorMessage);
         }
 
+        $errorMessage = 'Twitter token refreshed ';
+        $this->logInfo($errorMessage);
         return $response->json();
     }
 
