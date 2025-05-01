@@ -97,11 +97,17 @@ class TwitterOAuthService
 
     public function refreshToken(string $refreshToken): array
     {
-        $response = Http::asForm()->post($this->tokenUrl, [
-            'grant_type' => 'refresh_token',
-            'refresh_token' => $refreshToken,
-            'client_id' => $this->clientId,
-        ]);
+        $clientId = config('services.twitter.client_id');
+        $clientSecret = config('services.twitter.client_secret');
+
+        $response = Http::asForm()
+            ->withHeaders([
+                'Authorization' => 'Basic ' . base64_encode("$clientId:$clientSecret"),
+            ])
+            ->post('https://api.twitter.com/2/oauth2/token', [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $refreshToken,
+            ]);
 
         if ($response->failed()) {
             $errorMessage = 'Failed to refresh access token: ' . $response->body();
