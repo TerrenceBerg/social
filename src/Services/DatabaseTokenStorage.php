@@ -36,9 +36,9 @@ class DatabaseTokenStorage implements TokenStorageInterface
         return $this->getTokenRecord()?->refresh_token;
     }
 
-    public function getExpiresAt(): ?int
+    public function getExpiresAt(): ?Carbon
     {
-        return optional($this->getTokenRecord()?->expires_at)->timestamp;
+        return $this->getTokenRecord()?->expires_at;
     }
 
 
@@ -51,7 +51,7 @@ class DatabaseTokenStorage implements TokenStorageInterface
 
             $token->access_token = $tokenData['access_token'] ?? $token->access_token;
             $token->refresh_token = $tokenData['refresh_token'] ?? $token->refresh_token;
-            
+
             if (isset($tokenData['expires_in'])) {
                 $token->expires_at = Carbon::now()->addSeconds((int)$tokenData['expires_in']);
             } elseif (isset($tokenData['expires_at'])) {
