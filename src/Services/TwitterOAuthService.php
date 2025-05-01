@@ -97,9 +97,9 @@ class TwitterOAuthService
 
     public function refreshToken(string $refreshToken): array
     {
-        $clientId = config('services.twitter.client_id');
-        $clientSecret = config('services.twitter.client_secret');
-
+        $clientId = config('social.twitter.client_id');
+        $clientSecret = config('social.twitter.client_secret');
+        
         $response = Http::asForm()
             ->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode("$clientId:$clientSecret"),
