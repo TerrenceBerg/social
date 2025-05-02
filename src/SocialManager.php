@@ -7,6 +7,7 @@ use Tuna976\Social\Concerns\LogsToChannel;
 use Tuna976\Social\Models\SocialAuthToken;
 use Tuna976\Social\Services\Facebook\FacebookOAuthService;
 use Tuna976\Social\Services\Instagram\InstagramOAuthService;
+use Tuna976\Social\Services\TikTok\TikTokOAuthService;
 use Tuna976\Social\Services\TwitterOAuthService;
 
 
@@ -19,6 +20,7 @@ class SocialManager
         protected TwitterOAuthService $twitterOAuth,
         protected FacebookOAuthService $facebookOAuth,
         protected InstagramOAuthService $instagramService,
+        protected TikTokOAuthService $tiktokService,
     ) {}
 
     public function withProvider(string $provider): self
@@ -55,6 +57,10 @@ class SocialManager
             $authUrl = $this->instagramService->getAuthorizationUrl($state, '');
             return redirect($authUrl);
         }
+        if ($this->provider === 'tiktok') {
+            $authUrl = $this->tiktokService->getAuthorizationUrl($state);
+            return redirect($authUrl);
+        }
         $errorMessage = "Provider [{$this->provider}] is not supported.";
         $this->logError($errorMessage);
         throw new \Exception($errorMessage);
@@ -69,6 +75,7 @@ class SocialManager
             'twitter' => $this->handleTwitter($record, $code),
             'facebook' => $this->handleFacebook($record, $code),
             'instagram' => $this->handleInstagram($record, $code),
+            'tiktok' => $this->handleTikTok($record, $code),
             default => throw new \Exception("Provider [{$this->provider}] is not supported."),
         };
     }
@@ -125,6 +132,22 @@ class SocialManager
         return [
             'user' => $user,
             'tokens' => $tokens,
+        ];
+    }
+    protected function handleTikTok($record, string $code): array
+    {
+        $tokens = $this->tiktokService->getAccessToken($code);
+        $user = $this->tiktokService->getUserProfile($tokens['access_token']);
+
+        $record->update([
+            'access_token' => $tokens['access_token'] ?? null,
+            'expires_at' => now()->addSeconds($tokens['expires_in'] ?? 3600),
+            'user_id' => $user['id'] ?? null,
+        ]);
+
+        return [
+            'user' => $user,
+            'tokens' => $tokens
         ];
     }
 

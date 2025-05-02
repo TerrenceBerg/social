@@ -48,5 +48,17 @@ return [
             'pages_read_engagement',
         ],
     ],
+    'tiktok' => [
+        'client_id' => env('TIKTOK_CLIENT_ID'),
+        'client_secret' => env('TIKTOK_CLIENT_SECRET'),
+        'redirect' => env('TIKTOK_REDIRECT_URI'),
+        'scopes' => [
+            'user.info.basic',
+            'user.info.email',
+            'video.list',
+            'video.upload',
+            'video.publish',
+        ],
+    ],
     'log_channel' => env('SOCIAL_MEDIA_LOG_CHANNEL', 'default'),
 ];
