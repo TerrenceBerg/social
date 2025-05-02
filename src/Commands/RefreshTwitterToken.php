@@ -19,7 +19,7 @@ class RefreshTwitterToken extends Command
             $storage = new DatabaseTokenStorage($provider);
             $expiresAt = $storage->getExpiresAt();
 
-            if (!$expiresAt || now()->addMinutes(10)->gte($expiresAt)) {
+            if (!$expiresAt || now()->addMinutes(10)->gte($this->parseToCarbon($expiresAt))) {
                 $refreshToken = $storage->getRefreshToken();
 
                 if (!$refreshToken) {
@@ -41,6 +41,27 @@ class RefreshTwitterToken extends Command
         } catch (Exception $e) {
             $this->error("Error refreshing token: " . $e->getMessage());
             return self::FAILURE;
+        }
+    }
+    protected function parseToCarbon($value): ?\Carbon\Carbon
+    {
+        if (!$value) {
+            return null;
+        }
+
+        if ($value instanceof \Carbon\Carbon) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return \Carbon\Carbon::createFromTimestamp((int) $value);
+        }
+
+        try {
+            return \Carbon\Carbon::parse($value);
+        } catch (\Exception $e) {
+            $this->error("Invalid date format: {$value}");
+            return null;
         }
     }
 }
