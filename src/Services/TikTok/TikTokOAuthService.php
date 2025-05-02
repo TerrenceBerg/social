@@ -3,6 +3,7 @@ namespace Tuna976\Social\Services\TikTok;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Tuna976\Social\Contracts\TokenStorageInterface;
 
 class TikTokOAuthService
 {
@@ -12,13 +13,16 @@ class TikTokOAuthService
     protected array $scopes;
     protected $storage;
 
-    public function __construct($storage)
+    public function __construct(TokenStorageInterface $storage)
     {
+        $this->storage = $storage;
+        $this->storage->setProvider('tiktok');
+
         $this->clientId = config('social.tiktok.client_id');
         $this->clientSecret = config('social.tiktok.client_secret');
         $this->redirectUri = config('social.tiktok.redirect');
         $this->scopes = config('social.tiktok.scopes');
-        $this->storage = $storage;
+
     }
 
     public function getAuthorizationUrl(string $state): string
