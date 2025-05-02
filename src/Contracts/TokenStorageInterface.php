@@ -1,15 +1,13 @@
 <?php
 namespace Tuna976\Social\Contracts;
 
-use Carbon\Carbon;
-
 interface TokenStorageInterface
 {
     public function getAccessToken(): ?string;
 
     public function getRefreshToken(): ?string;
 
-    public function getExpiresAt(): ?Carbon;
+    public function getExpiresAt(): ?int;
 
     public function storeTokens(array $tokenData): void;
 

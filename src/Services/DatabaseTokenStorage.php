@@ -36,9 +36,9 @@ class DatabaseTokenStorage implements TokenStorageInterface
         return $this->getTokenRecord()?->refresh_token;
     }
 
-    public function getExpiresAt(): ?Carbon
+    public function getExpiresAt(): ?int
     {
-        return $this->getTokenRecord()?->expires_at;
+        return optional($this->getTokenRecord()?->expires_at)->timestamp;
     }
 
 
@@ -69,11 +69,8 @@ class DatabaseTokenStorage implements TokenStorageInterface
 
             $token->save();
         } catch (\Exception $e) {
-           $this->logError('Failed to store tokens: ' . $e->getMessage(), [
-                'provider' => $this->provider,
-                'tokenData' => $tokenData,
-            ]);
-            throw $e; // or handle it differently if you want to suppress
+           $this->logError('Failed to store tokens: ' . $e->getMessage().' '.$this->provider);
+            throw $e;
         }
     }
 
