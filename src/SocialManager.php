@@ -29,6 +29,7 @@ class SocialManager
 
     public function redirect(): \Illuminate\Http\RedirectResponse
     {
+        SocialAuthToken::where('provider', $this->provider)->delete();
         $state = Str::random(40);
 
         SocialAuthToken::create([
