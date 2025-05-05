@@ -28,15 +28,25 @@ class TikTokPostingService
         $accessToken = $this->getAccessToken();
 
         // Step 1: Init Upload
-        $init = Http::withToken($accessToken)->post(
-            'https://open.tiktokapis.com/v2/post/publish/inbox/video/init/',
-            [
-                'source' => [
-                    'source_type' => 'FILE_UPLOAD'
+        $init = Http::withToken($accessToken)
+            ->withHeaders([
+                'Content-Type' => 'application/json; charset=UTF-8',
+            ])
+            ->post('https://open.tiktokapis.com/v2/post/publish/inbox/video/init/', [
+                'post_info' => [
+                    'title' => Str::limit($caption, 150),
+                    'privacy_level' => 'MUTUAL_FOLLOW_FRIENDS',
+                    'disable_duet' => false,
+                    'disable_comment' => false,
+                    'disable_stitch' => false,
+                    'video_cover_timestamp_ms' => 1000,
                 ],
-                'video_size' => filesize($videoPath),
-            ]
-        );
+                'source_info' => [
+                    'source' => 'FILE_UPLOAD', 
+                    'video_size' => filesize($videoPath),
+
+                ],
+            ]);
 
         if (!$init->successful()) {
 //            $this->logError('TikTok Init Upload Failed: ' . $init->body());
