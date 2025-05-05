@@ -30,7 +30,12 @@ class TikTokPostingService
         // Step 1: Init Upload
         $init = Http::withToken($accessToken)->post(
             'https://open.tiktokapis.com/v2/post/publish/inbox/video/init/',
-            ['video_size' => filesize($videoPath)]
+            [
+                'source' => [
+                    'source_type' => 'FILE_UPLOAD'
+                ],
+                'video_size' => filesize($videoPath),
+            ]
         );
 
         if (!$init->successful()) {
