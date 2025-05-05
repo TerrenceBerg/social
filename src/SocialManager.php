@@ -137,7 +137,8 @@ class SocialManager
     protected function handleTikTok($record, string $code): array
     {
         $tokens = $this->tiktokService->getAccessToken($code);
-        $user = $this->tiktokService->getUserProfile($tokens['access_token']);
+//        $user = $this->tiktokService->getUserProfile($tokens['access_token']);
+        $user =['id'=>null];
 
         $record->update([
             'access_token' => $tokens['access_token'] ?? null,
