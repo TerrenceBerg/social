@@ -27,7 +27,7 @@ class TikTokOAuthService
 
     public function getAuthorizationUrl(string $state): string
     {
-        return 'https://www.tiktok.com/v2/auth/authorize?' . http_build_query([
+        return 'https://www.tiktokapis.com/v2/platform/oauth/connect?' . http_build_query([
                 'client_key' => $this->clientId,
                 'redirect_uri' => $this->redirectUri,
                 'response_type' => 'code',
