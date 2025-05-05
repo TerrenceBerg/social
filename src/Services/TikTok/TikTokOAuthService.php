@@ -53,7 +53,8 @@ class TikTokOAuthService
         $tokenData = $response->json();
 
         // Get user info and store token
-        $user = $this->getUserProfile($tokenData['access_token']);
+//        $user = $this->getUserProfile($tokenData['access_token']);
+        $user =null;
         $this->storage->storeTokens($tokenData, ['data' => $user]);
 
         return $tokenData;
