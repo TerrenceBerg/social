@@ -38,7 +38,7 @@ class TikTokOAuthService
 
     public function getAccessToken(string $code): array
     {
-        $response = Http::asForm()->post('https://open.tiktokapis.com/v2/oauth/token', [
+        $response = Http::asForm()->post('https://open.tiktokapis.com/v2/oauth/token/', [
             'client_key' => $this->clientId,
             'client_secret' => $this->clientSecret,
             'code' => $code,
