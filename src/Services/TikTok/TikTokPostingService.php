@@ -39,7 +39,7 @@ class TikTokPostingService
         );
 
         if (!$init->successful()) {
-            $this->logError('TikTok Init Upload Failed: ' . $init->body());
+//            $this->logError('TikTok Init Upload Failed: ' . $init->body());
             throw new \Exception('TikTok Init Upload Failed: ' . $init->body());
         }
 
@@ -53,7 +53,7 @@ class TikTokPostingService
         ])->put($uploadUrl, $videoBytes);
 
         if (!$upload->successful()) {
-            $this->logError('TikTok Video Upload Failed: ' . $upload->body());
+//            $this->logError('TikTok Video Upload Failed: ' . $upload->body());
             throw new \Exception('TikTok Video Upload Failed: ' . $upload->body());
         }
 
@@ -67,11 +67,11 @@ class TikTokPostingService
         );
 
         if (!$publish->successful()) {
-            $this->logError('TikTok Publish Failed: ' . $publish->body());
+//            $this->logError('TikTok Publish Failed: ' . $publish->body());
             throw new \Exception('TikTok Publish Failed: ' . $publish->body());
         }
 
-        $this->logInfo('TikTok video posted successfully with ID: ' . $publish['video_id'] ?? 'unknown');
+//        $this->logInfo('TikTok video posted successfully with ID: ' . $publish['video_id'] ?? 'unknown');
         return $publish->json();
     }
 
