@@ -42,7 +42,7 @@ class TikTokPostingService
                     'video_cover_timestamp_ms' => 1000,
                 ],
                 'source_info' => [
-                    'source' => 'FILE_UPLOAD', 
+                    'source' => 'FILE_UPLOAD',
                     'video_size' => filesize($videoPath),
 
                 ],
@@ -73,6 +73,48 @@ class TikTokPostingService
             [
                 'video_id' => $videoId,
                 'caption'  => Str::limit($caption, 150),
+            ]
+        );
+
+        if (!$publish->successful()) {
+//            $this->logError('TikTok Publish Failed: ' . $publish->body());
+            throw new \Exception('TikTok Publish Failed: ' . $publish->body());
+        }
+
+//        $this->logInfo('TikTok video posted successfully with ID: ' . $publish['video_id'] ?? 'unknown');
+        return $publish->json();
+    }
+
+
+    public function postVideoFromUrl(string $videoUrl, string $caption): array
+    {
+        $accessToken = $this->getAccessToken();
+
+        // Step 1: Init Upload via URL
+        $init = Http::withToken($accessToken)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+            ])
+            ->post('https://open.tiktokapis.com/v2/post/publish/inbox/video/init/', [
+                'source_info' => [
+                    'source' => 'PULL_FROM_URL',
+                    'video_url' => $videoUrl,
+                ],
+            ]);
+
+        if (!$init->successful()) {
+//            $this->logError('TikTok Init Upload Failed: ' . $init->body());
+            throw new \Exception('TikTok Init Upload Failed: ' . $init->body());
+        }
+
+        $videoId = $init['video_id'];
+
+        // Step 2: Publish the video
+        $publish = Http::withToken($accessToken)->post(
+            'https://open.tiktokapis.com/v2/post/publish/video/',
+            [
+                'video_id' => $videoId,
+                'caption'  => $caption,
             ]
         );
 
