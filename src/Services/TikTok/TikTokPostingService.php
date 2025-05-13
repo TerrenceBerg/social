@@ -25,105 +25,128 @@ class TikTokPostingService
     {
         $this->validateVideo($videoPath);
 
+
         $accessToken = $this->getAccessToken();
+        $videoSize = filesize($videoPath);
 
-        // Step 1: Init Upload
-        $init = Http::withToken($accessToken)
-            ->withHeaders([
-                'Content-Type' => 'application/json; charset=UTF-8',
-            ])
-            ->post('https://open.tiktokapis.com/v2/post/publish/inbox/video/init/', [
-                'post_info' => [
-                    'title' => Str::limit($caption, 150),
-                    'privacy_level' => 'MUTUAL_FOLLOW_FRIENDS',
-                    'disable_duet' => false,
-                    'disable_comment' => false,
-                    'disable_stitch' => false,
-                    'video_cover_timestamp_ms' => 1000,
-                ],
-                'source_info' => [
-                    'source' => 'FILE_UPLOAD',
-                    'video_size' => filesize($videoPath),
+        $initResponse = $this->initUpload($accessToken, Str::limit($caption, 150), $videoSize,$videoPath);
 
-                ],
-            ]);
+        $uploadUrl = $initResponse['data']['upload_url'];
+        $videoId = $initResponse['data']['publish_id'];
 
-        if (!$init->successful()) {
-//            $this->logError('TikTok Init Upload Failed: ' . $init->body());
-            throw new \Exception('TikTok Init Upload Failed: ' . $init->body());
-        }
+        $this->uploadFile($uploadUrl, $videoPath);
 
-        $uploadUrl = $init['upload_url'];
-        $videoId   = $init['video_id'];
-
-        // Step 2: Upload video
-        $videoBytes = file_get_contents($videoPath);
-        $upload = Http::withHeaders([
-            'Content-Type' => 'application/octet-stream',
-        ])->put($uploadUrl, $videoBytes);
-
-        if (!$upload->successful()) {
-//            $this->logError('TikTok Video Upload Failed: ' . $upload->body());
-            throw new \Exception('TikTok Video Upload Failed: ' . $upload->body());
-        }
-
-        // Step 3: Publish
-        $publish = Http::withToken($accessToken)->post(
-            'https://open.tiktokapis.com/v2/post/publish/video/',
-            [
-                'video_id' => $videoId,
-                'caption'  => Str::limit($caption, 150),
-            ]
-        );
-
-        if (!$publish->successful()) {
-//            $this->logError('TikTok Publish Failed: ' . $publish->body());
-            throw new \Exception('TikTok Publish Failed: ' . $publish->body());
-        }
-
-//        $this->logInfo('TikTok video posted successfully with ID: ' . $publish['video_id'] ?? 'unknown');
-        return $publish->json();
+        return $this->publishVideo($accessToken, $videoId, $caption);
     }
-
 
     public function postVideoFromUrl(string $videoUrl, string $caption): array
     {
+
         $accessToken = $this->getAccessToken();
 
-        // Step 1: Init Upload via URL
         $init = Http::withToken($accessToken)
-            ->withHeaders([
-                'Content-Type' => 'application/json',
-            ])
-            ->post('https://open.tiktokapis.com/v2/post/publish/inbox/video/init/', [
+            ->post('https://open.tiktokapis.com/v2/post/publish/video/init/', [
                 'source_info' => [
                     'source' => 'PULL_FROM_URL',
                     'video_url' => $videoUrl,
                 ],
+                'post_info' => [
+                    'title' => $caption,
+                    'privacy_level' => 'SELF_ONLY',
+                ],
             ]);
+        if ($init->failed()) {
+            $json = $init->json();
+            $errorMessage = $json['error']['message'] ?? $init->body(); // Fallback to body
+            throw new \Exception("TikTok Init Upload Failed: $errorMessage");
+        }
+        dd($init->json());
+        return $this->publishVideo($accessToken, $init['video_id'], $caption);
+    }
 
-        if (!$init->successful()) {
-//            $this->logError('TikTok Init Upload Failed: ' . $init->body());
-            throw new \Exception('TikTok Init Upload Failed: ' . $init->body());
+
+    protected function initUpload(string $token, string $caption, int $videoSize, string $videoPath): array
+    {
+        $caption = mb_convert_encoding($caption, 'UTF-8', 'UTF-8');
+
+        $chunkSize = 10 * 1024 * 1024; // 5MB
+        $totalChunkCount = (int) ceil($videoSize / $chunkSize);
+        $videoType = mime_content_type($videoPath);
+        $payload = [
+            'post_info' => [
+                'title' => $caption,
+                'privacy_level' => 'SELF_ONLY',
+                'disable_duet' => false,
+                'disable_comment' => false,
+                'disable_stitch' => false,
+            ],
+            'source_info' => [
+                'source' => 'FILE_UPLOAD',
+                'video_size' => $videoSize,
+                'video_type' => $videoType,
+                'upload_type' => 'VIDEO_UPLOAD',
+                'chunk_size' => $videoSize,
+                'total_chunk_count' => 1,
+            ],
+        ];
+
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$token}",
+            'Content-Type'  => 'application/json',
+        ])->post('https://open.tiktokapis.com/v2/post/publish/video/init/', $payload);
+
+        $this->ensureSuccess($response, 'TikTok Init Upload Failed');
+
+        return $response->json();
+    }
+
+    protected function uploadFile(string $uploadUrl, string $videoPath): void
+    {
+        $fileSize = filesize($videoPath);
+
+        $headers = [
+            'Content-Range'   => 'bytes 0-' . ($fileSize - 1) . '/' . $fileSize,
+            'Content-Length'  => $fileSize,
+            'Content-Type'    => 'video/mp4',
+        ];
+        if (!file_exists($videoPath)) {
+            throw new \Exception("Video file does not exist: $videoPath");
         }
 
-        $videoId = $init['video_id'];
+        if (!is_readable($videoPath)) {
+            throw new \Exception("Video file is not readable: $videoPath");
+        }
+        $data = file_get_contents($videoPath);
+        if ($data === false) {
+            throw new \Exception("Failed to read video file at: $videoPath");
+        }
+        $video_data= mb_convert_encoding($data, 'UTF-8', 'UTF-8');
 
-        // Step 2: Publish the video
-        $publish = Http::withToken($accessToken)->post(
-            'https://open.tiktokapis.com/v2/post/publish/video/',
-            [
+        if (!mb_check_encoding($video_data, 'UTF-8')) {
+            throw new \Exception("Video file contains invalid UTF-8 characters.");
+        }
+
+        $upload = Http::timeout(720)
+            ->withHeaders($headers)
+            ->put($uploadUrl, $video_data);
+
+        $this->ensureSuccess($upload, 'TikTok Video Upload Failed');
+    }
+
+    protected function publishVideo(string $token, string $videoId, string $caption): array
+    {
+        $publish = Http::withToken($token)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+            ])
+            ->post('https://open.tiktokapis.com/v2/video/publish/', [
                 'video_id' => $videoId,
                 'caption'  => $caption,
-            ]
-        );
+//                'caption'  => Str::limit($caption, 150),
+            ]);
 
-        if (!$publish->successful()) {
-//            $this->logError('TikTok Publish Failed: ' . $publish->body());
-            throw new \Exception('TikTok Publish Failed: ' . $publish->body());
-        }
+        $this->ensureSuccess($publish, 'TikTok Publish Failed');
 
-//        $this->logInfo('TikTok video posted successfully with ID: ' . $publish['video_id'] ?? 'unknown');
         return $publish->json();
     }
 
@@ -133,14 +156,20 @@ class TikTokPostingService
             throw new \Exception("Video file not found at path: {$videoPath}");
         }
 
-        $size = filesize($videoPath);
-        if ($size > $this->maxFileSize) {
+        if (filesize($videoPath) > $this->maxFileSize) {
             throw new \Exception("Video file exceeds maximum size of 75MB.");
         }
 
         $extension = strtolower(pathinfo($videoPath, PATHINFO_EXTENSION));
         if (!in_array($extension, $this->allowedExtensions)) {
             throw new \Exception("Invalid video format. Allowed: " . implode(', ', $this->allowedExtensions));
+        }
+    }
+
+    protected function ensureSuccess($response, string $errorMessage): void
+    {
+        if (!$response->successful()) {
+            throw new \Exception("{$errorMessage}: " . $response->body());
         }
     }
 
