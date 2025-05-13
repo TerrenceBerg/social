@@ -3,6 +3,7 @@
 namespace Tuna976\Social;
 
 use Illuminate\Support\ServiceProvider;
+use Tuna976\Social\Commands\RefreshTikTokToken;
 use Tuna976\Social\Commands\RefreshTwitterToken;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 use Tuna976\Social\Services\DatabaseTokenStorage;
@@ -16,6 +17,7 @@ class SocialServiceProvider extends ServiceProvider
     {
         $this->commands([
             RefreshTwitterToken::class,
+            RefreshTikTokToken::class,
         ]);
         $this->mergeConfigFrom(__DIR__ . '/../config/social.php', 'social');
 

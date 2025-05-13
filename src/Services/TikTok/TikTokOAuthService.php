@@ -72,4 +72,24 @@ class TikTokOAuthService
 
         return $response->json()['data']['user'];
     }
+
+    public function refreshToken(string $refreshToken): array
+    {
+        try {
+            $response = Http::asForm()->post('https://open-api.tiktok.com/oauth/refresh_token/', [
+                'client_key' =>$this->clientId,
+                'client_secret' => $this->clientSecret,
+                'refresh_token' => $refreshToken,
+                'grant_type' => 'refresh_token',
+            ]);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            throw new \Exception("Error refreshing TikTok token: " . $response->body());
+        } catch (\Exception $e) {
+            throw new \Exception("Error refreshing TikTok token: " . $e->getMessage());
+        }
+    }
 }
