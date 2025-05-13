@@ -64,18 +64,20 @@ class TikTokPostingService
         return $this->publishVideo($accessToken, $init['video_id'], $caption);
     }
 
-
     public function postImagesToTikTok(array $imageUrls, string $caption): array
     {
         if (empty($imageUrls)) {
             throw new \Exception("No image URLs provided.");
         }
+
         foreach ($imageUrls as $url) {
             if (!filter_var($url, FILTER_VALIDATE_URL)) {
                 throw new \Exception("Invalid image URL: $url");
             }
         }
+
         $accessToken = $this->getAccessToken();
+
         $payload = [
             'media_type' => 'PHOTO',
             'post_mode' => 'DIRECT_POST',
@@ -93,6 +95,7 @@ class TikTokPostingService
                 'photo_cover_index' => 0
             ]
         ];
+
         $response = Http::withHeaders([
             'Authorization' => "Bearer {$accessToken}",
             'Content-Type' => 'application/json; charset=UTF-8',
@@ -102,9 +105,9 @@ class TikTokPostingService
             $errorBody = $response->body();
             throw new \Exception("TikTok Photo Post Failed: {$errorBody}");
         }
+
         return $response->json();
     }
-
     protected function initUpload(string $token, string $caption, int $videoSize, string $videoPath): array
     {
         $caption = mb_convert_encoding($caption, 'UTF-8', 'UTF-8');
