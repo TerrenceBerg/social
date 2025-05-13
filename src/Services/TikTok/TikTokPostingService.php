@@ -65,6 +65,46 @@ class TikTokPostingService
     }
 
 
+    public function postImagesToTikTok(array $imageUrls, string $caption): array
+    {
+        if (empty($imageUrls)) {
+            throw new \Exception("No image URLs provided.");
+        }
+        foreach ($imageUrls as $url) {
+            if (!filter_var($url, FILTER_VALIDATE_URL)) {
+                throw new \Exception("Invalid image URL: $url");
+            }
+        }
+        $accessToken = $this->getAccessToken();
+        $payload = [
+            'media_type' => 'PHOTO',
+            'post_mode' => 'DIRECT_POST',
+            'post_info' => [
+                'title' => $caption,
+                'privacy_level' => 'SELF_ONLY',
+                'disable_comment' => false,
+                'auto_add_music' => false,
+                'brand_content_toggle' => false,
+                'brand_organic_toggle' => false
+            ],
+            'source_info' => [
+                'source' => 'PULL_FROM_URL',
+                'photo_images' => $imageUrls,
+                'photo_cover_index' => 0
+            ]
+        ];
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer {$accessToken}",
+            'Content-Type' => 'application/json; charset=UTF-8',
+        ])->post('https://open.tiktokapis.com/v2/post/publish/content/init/', $payload);
+
+        if (!$response->successful()) {
+            $errorBody = $response->body();
+            throw new \Exception("TikTok Photo Post Failed: {$errorBody}");
+        }
+        return $response->json();
+    }
+
     protected function initUpload(string $token, string $caption, int $videoSize, string $videoPath): array
     {
         $caption = mb_convert_encoding($caption, 'UTF-8', 'UTF-8');
