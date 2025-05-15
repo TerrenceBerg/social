@@ -20,7 +20,7 @@ class YoutubeOAuthService
     public function getAuthorizationUrl(): string
     {
         $scopes = implode(' ', [
-            'https://www.googleapis.com/auth/youtube.upload',
+//            'https://www.googleapis.com/auth/youtube.upload',
             'https://www.googleapis.com/auth/youtube.readonly',
         ]);
 
