@@ -60,5 +60,10 @@ return [
             'video.publish',
         ],
     ],
+    'youtube' => [
+        'client_id' => env('YOUTUBE_CLIENT_ID'),
+        'client_secret' => env('YOUTUBE_CLIENT_SECRET'),
+        'redirect' => env('YOUTUBE_REDIRECT_URI'),
+    ],
     'log_channel' => env('SOCIAL_MEDIA_LOG_CHANNEL', 'default'),
 ];

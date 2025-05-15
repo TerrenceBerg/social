@@ -9,6 +9,7 @@ use Tuna976\Social\Services\Facebook\FacebookOAuthService;
 use Tuna976\Social\Services\Instagram\InstagramOAuthService;
 use Tuna976\Social\Services\TikTok\TikTokOAuthService;
 use Tuna976\Social\Services\TwitterOAuthService;
+use Tuna976\Social\Services\Youtube\YoutubeOAuthService;
 
 
 class SocialManager
@@ -21,6 +22,7 @@ class SocialManager
         protected FacebookOAuthService $facebookOAuth,
         protected InstagramOAuthService $instagramService,
         protected TikTokOAuthService $tiktokService,
+        protected YoutubeOAuthService $youtubeOAuthService,
     ) {}
 
     public function withProvider(string $provider): self
@@ -61,6 +63,10 @@ class SocialManager
             $authUrl = $this->tiktokService->getAuthorizationUrl($state);
             return redirect($authUrl);
         }
+        if ($this->provider === 'youtube') {
+            $authUrl = $this->youtubeOAuthService->getAuthorizationUrl($state);
+            return redirect($authUrl);
+        }
         $errorMessage = "Provider [{$this->provider}] is not supported.";
         $this->logError($errorMessage);
         throw new \Exception($errorMessage);
@@ -76,6 +82,7 @@ class SocialManager
             'facebook' => $this->handleFacebook($record, $code),
             'instagram' => $this->handleInstagram($record, $code),
             'tiktok' => $this->handleTikTok($record, $code),
+            'youtube' => $this->handleYoutube($record, $code),
             default => throw new \Exception("Provider [{$this->provider}] is not supported."),
         };
     }
@@ -138,6 +145,22 @@ class SocialManager
     {
         $tokens = $this->tiktokService->getAccessToken($code);
 //        $user = $this->tiktokService->getUserProfile($tokens['access_token']);
+        $user =['id'=>null];
+
+        $record->update([
+            'access_token' => $tokens['access_token'] ?? null,
+            'expires_at' => now()->addSeconds($tokens['expires_in'] ?? 3600),
+            'user_id' => $user['id'] ?? null,
+        ]);
+
+        return [
+            'user' => $user,
+            'tokens' => $tokens
+        ];
+    }
+    protected function handleYoutube($record, string $code): array
+    {
+        $tokens = $this->youtubeOAuthService->getAccessToken($code);
         $user =['id'=>null];
 
         $record->update([
