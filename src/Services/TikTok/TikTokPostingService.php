@@ -60,7 +60,8 @@ class TikTokPostingService
             $errorMessage = $json['error']['message'] ?? $init->body(); // Fallback to body
             throw new \Exception("TikTok Init Upload Failed: $errorMessage");
         }
-        return $this->publishVideo($accessToken, $init['video_id'], $caption);
+        return $init->json();
+//        return $this->publishVideo($accessToken, $init['video_id'], $caption);
     }
 
     public function postImagesToTikTok(array $imageUrls, string $caption): array
