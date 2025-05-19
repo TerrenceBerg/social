@@ -1,14 +1,29 @@
 <?php
+
 namespace Tuna976\Social\Services\Youtube;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Exception;
+use Tuna976\Social\Concerns\LogsToChannel;
+use Tuna976\Social\Contracts\TokenStorageInterface;
 
 class YoutubePostingService
 {
-    public function uploadVideo(string $accessToken, string $videoPath, string $title, string $description = '', array $tags = [], string $privacy = 'private'): array
+    use LogsToChannel;
+
+    public function __construct(
+        protected TokenStorageInterface $storage,
+        protected string                $provider = 'youtube'
+    )
     {
+        $this->storage->setProvider($this->provider);
+    }
+
+    public function uploadVideo(string $videoPath, string $title, string $description = '', array $tags = [], string $privacy = 'private'): array
+    {
+        $accessToken = $this->getAccessToken();
+
         // Step 1: Initialize resumable session
         $initResponse = Http::withToken($accessToken)
             ->withHeaders([
@@ -50,5 +65,10 @@ class YoutubePostingService
         }
 
         return $uploadResponse->json();
+    }
+
+    protected function getAccessToken(): string
+    {
+        return $this->storage->getAccessToken();
     }
 }
