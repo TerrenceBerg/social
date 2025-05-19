@@ -30,8 +30,9 @@ class YoutubeOAuthService
                 'redirect_uri' => $this->redirectUri,
                 'response_type' => 'code',
                 'scope' => $scopes,
-                'access_type' => 'offline',
-                'prompt' => 'consent',
+                'access_type' => 'online',
+                'approval_prompt' => 'auto',
+                'state' => null
             ]);
     }
 
