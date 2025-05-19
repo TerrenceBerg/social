@@ -1,4 +1,5 @@
 <?php
+
 namespace Tuna976\Social\Services\Youtube;
 
 use Illuminate\Support\Facades\Http;
@@ -17,22 +18,25 @@ class YoutubeOAuthService
         $this->redirectUri = config('social.youtube.redirect');
     }
 
+
+
     public function getAuthorizationUrl(): string
     {
 //        Readonly
         $scopes = implode(' ', [
-//            'https://www.googleapis.com/auth/youtube.upload',
-            'https://www.googleapis.com/auth/youtube.readonly',
+            'https://www.googleapis.com/auth/youtube.upload',
+            // 'https://www.googleapis.com/auth/youtube.readonly',
         ]);
 
         return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query([
+                'response_type' => 'code',
+                'access_type' => 'offline',
                 'client_id' => $this->clientId,
                 'redirect_uri' => $this->redirectUri,
-                'response_type' => 'code',
+                'state' => null,
                 'scope' => $scopes,
-                'access_type' => 'online',
-                'approval_prompt' => 'auto',
-                'state' => null
+                'approval_prompt' => 'force',
+                'service' => 'lso'
             ]);
     }
 

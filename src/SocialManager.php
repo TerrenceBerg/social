@@ -72,7 +72,7 @@ class SocialManager
         throw new \Exception($errorMessage);
     }
 
-    public function handleCallback(string $code, string $state): array
+    public function handleCallback(string $code, string $state=null): array
     {
         $record = SocialAuthToken::where('provider', $this->provider)
             ->firstOrFail();
