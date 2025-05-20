@@ -54,7 +54,6 @@ return [
         'redirect' => env('TIKTOK_REDIRECT_URI'),
         'scopes' => [
             'user.info.basic',
-            'user.info.email',
             'video.list',
             'video.upload',
             'video.publish',
@@ -64,6 +63,7 @@ return [
         'client_id' => env('YOUTUBE_CLIENT_ID'),
         'client_secret' => env('YOUTUBE_CLIENT_SECRET'),
         'redirect' => env('YOUTUBE_REDIRECT_URI'),
+        'privacy_status' => env('YOUTUBE_PRIVACY_STATUS','private'),
     ],
     'log_channel' => env('SOCIAL_MEDIA_LOG_CHANNEL', 'default'),
 ];

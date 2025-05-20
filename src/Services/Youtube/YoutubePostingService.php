@@ -85,7 +85,7 @@ class YoutubePostingService
     /**
      * Upload a video to YouTube
      */
-    public function uploadVideo($videoPath, $title, $description='', $tags = [], $privacyStatus = 'public')
+    public function uploadVideo($videoPath, $title, $description='', $tags = [], $privacyStatus = 'private')
     {
         try {
             // Check if file exists and is readable
