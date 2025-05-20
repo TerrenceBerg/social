@@ -1,14 +1,21 @@
 <?php
+
 namespace Tuna976\Social\Services;
+
 use Illuminate\Support\Facades\Http;
+use Tuna976\Social\Concerns\HandlesErrorNotifications;
 use Tuna976\Social\Concerns\LogsToChannel;
 
 class TwitterPostService
 {
     use LogsToChannel;
+    use HandlesErrorNotifications;
+
     public function __construct(
         protected TwitterTokenManager $tokenManager
-    ) {}
+    )
+    {
+    }
 
     public function post(string $text): array
     {
@@ -21,8 +28,7 @@ class TwitterPostService
 
         if (!$response->successful()) {
             $errorMessage = "Tweet failed: " . $response->body();
-            $this->logError($errorMessage);
-            throw new \Exception($errorMessage);
+            $this->throwWithNotification($errorMessage);
         }
 
         return $response->json();
@@ -45,9 +51,8 @@ class TwitterPostService
             ]);
 
         if (!$response->successful()) {
-            $errorMessage ="Tweet with media failed: " . $response->body();
-            $this->logError($errorMessage);
-            throw new \Exception($errorMessage);
+            $errorMessage = "Tweet with media failed: " . $response->body();
+            $this->throwWithNotification($errorMessage);
         }
 
         return $response->json();
@@ -59,8 +64,7 @@ class TwitterPostService
 
         if (!file_exists($mediaPath)) {
             $errorMessage = "Media file not found Twitter: {$mediaPath}";
-            $this->logError($errorMessage);
-            throw new \Exception($errorMessage);
+            $this->throwWithNotification($errorMessage);
         }
 
         $mediaContent = file_get_contents($mediaPath);
@@ -73,11 +77,16 @@ class TwitterPostService
 
         if (!$response->successful()) {
             $errorMessage = "Media upload failed for Twitter: " . $response->body();
-            $this->logError($errorMessage);
-            throw new \Exception($errorMessage);
+            $this->throwWithNotification($errorMessage);
         }
 
         $responseData = $response->json();
         return $responseData['media_id_string'];
+    }
+
+    protected function throwWithNotification(string $message): void
+    {
+        $this->notifyError($message);
+        throw new \Exception($message);
     }
 }

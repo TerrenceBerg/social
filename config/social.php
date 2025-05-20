@@ -66,4 +66,8 @@ return [
         'privacy_status' => env('YOUTUBE_PRIVACY_STATUS','private'),
     ],
     'log_channel' => env('SOCIAL_MEDIA_LOG_CHANNEL', 'default'),
+    'log_emails' => [
+        'enabled' => env('SOCIAL_MEDIA_LOG_EMAIL_ENABLED', true),
+        'social_log_email_address' => env('SOCIAL_LOG_EMAIL_ADDRESS', '<EMAIL>'),
+    ],
 ];

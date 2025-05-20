@@ -19,6 +19,7 @@ class SocialServiceProvider extends ServiceProvider
             RefreshTwitterToken::class,
             RefreshTikTokToken::class,
         ]);
+        $this->loadViewsFrom(__DIR__.'/resources/views', 'social');
         $this->mergeConfigFrom(__DIR__ . '/../config/social.php', 'social');
 
         // Publish migrations

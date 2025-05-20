@@ -4,11 +4,13 @@ namespace Tuna976\Social\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Tuna976\Social\Concerns\HandlesErrorNotifications;
 use Tuna976\Social\Concerns\LogsToChannel;
 
 class TwitterOAuthService
 {
     use LogsToChannel;
+    use HandlesErrorNotifications;
 
     protected string $clientId;
     protected string $clientSecret;
@@ -77,9 +79,7 @@ class TwitterOAuthService
 
         if (!$response->successful()) {
             $errorMessage = 'Failed to retrieve access token: ' . $response->body();
-            $this->logError($errorMessage);
-            throw new \Exception($errorMessage);
-
+            $this->throwWithNotification($errorMessage);
         }
 
         $tokens = $response->json();
@@ -111,8 +111,7 @@ class TwitterOAuthService
 
         if ($response->failed()) {
             $errorMessage = 'Failed to refresh access token: ' . $response->body();
-            $this->logError($errorMessage);
-            throw new \Exception($errorMessage);
+            $this->throwWithNotification($errorMessage);
         }
 
         $errorMessage = 'Twitter token refreshed ';
@@ -127,11 +126,15 @@ class TwitterOAuthService
 
         if ($response->failed()) {
             $errorMessage = 'Failed to fetch user profile: ' . $response->body();
-            $this->logError($errorMessage);
-            throw new \Exception($errorMessage);
+            $this->throwWithNotification($errorMessage);
         }
 
         return $response->json();
+    }
+    protected function throwWithNotification(string $message): void
+    {
+        $this->notifyError($message);
+        throw new \Exception($message);
     }
 
 }

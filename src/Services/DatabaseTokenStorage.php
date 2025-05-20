@@ -5,6 +5,7 @@ namespace Tuna976\Social\Services;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Tuna976\Social\Concerns\HandlesErrorNotifications;
 use Tuna976\Social\Concerns\LogsToChannel;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 use Tuna976\Social\Models\SocialAuthToken;
@@ -14,6 +15,7 @@ class DatabaseTokenStorage implements TokenStorageInterface
 {
 
     use LogsToChannel;
+    use HandlesErrorNotifications;
     protected string $provider;
 
     public function __construct(string $provider = 'twitter')
@@ -73,8 +75,7 @@ class DatabaseTokenStorage implements TokenStorageInterface
 
             $token->save();
         } catch (\Exception $e) {
-           $this->logError('Failed to store tokens: ' . $e->getMessage().' '.$this->provider);
-            throw $e;
+            $this->throwWithNotification('Failed to store tokens: ' . $e->getMessage().' '.$this->provider);
         }
     }
 
@@ -83,5 +84,10 @@ class DatabaseTokenStorage implements TokenStorageInterface
         return SocialAuthToken::where('provider', $this->provider)
             ->latest()
             ->first();
+    }
+    protected function throwWithNotification(string $message): void
+    {
+        $this->notifyError($message);
+        throw new \Exception($message);
     }
 }
