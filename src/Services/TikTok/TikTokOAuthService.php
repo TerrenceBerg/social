@@ -3,10 +3,15 @@ namespace Tuna976\Social\Services\TikTok;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Tuna976\Social\Concerns\HandlesErrorNotifications;
+use Tuna976\Social\Concerns\LogsToChannel;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 
 class TikTokOAuthService
 {
+    use LogsToChannel;
+    use HandlesErrorNotifications;
+
     protected string $clientId;
     protected string $clientSecret;
     protected string $redirectUri;
@@ -47,7 +52,7 @@ class TikTokOAuthService
         ]);
 
         if (!$response->successful()) {
-            throw new \Exception('Failed to get TikTok access token: ' . $response->body());
+            $this->throwWithNotification('Failed to get TikTok access token: ' . $response->body());
         }
 
         $tokenData = $response->json();
@@ -67,7 +72,7 @@ class TikTokOAuthService
         ]);
 
         if (!$response->successful()) {
-            throw new \Exception('Failed to get TikTok user profile: ' . $response->body());
+            $this->throwWithNotification('Failed to get TikTok user profile: ' . $response->body());
         }
 
         return $response->json()['data']['user'];
@@ -86,10 +91,15 @@ class TikTokOAuthService
             if ($response->successful()) {
                 return $response->json();
             }
-
-            throw new \Exception("Error refreshing TikTok token: " . $response->body());
+            $this->throwWithNotification("Error refreshing TikTok token: " . $response->body());
         } catch (\Exception $e) {
-            throw new \Exception("Error refreshing TikTok token: " . $e->getMessage());
+            $this->throwWithNotification("Error refreshing TikTok token: " . $e->getMessage());
+
         }
+    }
+    protected function throwWithNotification(string $message): bool
+    {
+        $this->notifyError($message);
+        throw new \Exception($message);
     }
 }

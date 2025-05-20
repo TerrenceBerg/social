@@ -4,12 +4,14 @@ namespace Tuna976\Social\Services\TikTok;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Tuna976\Social\Concerns\HandlesErrorNotifications;
 use Tuna976\Social\Concerns\LogsToChannel;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 
 class TikTokPostingService
 {
     use LogsToChannel;
+    use HandlesErrorNotifications;
 
     protected int $maxFileSize = 75 * 1024 * 1024;
     protected array $allowedExtensions = ['mp4', 'mov', 'avi'];
@@ -57,8 +59,8 @@ class TikTokPostingService
             ]);
         if ($init->failed()) {
             $json = $init->json();
-            $errorMessage = $json['error']['message'] ?? $init->body(); // Fallback to body
-            throw new \Exception("TikTok Init Upload Failed: $errorMessage");
+            $errorMessage = $json['error']['message'] ?? $init->body();
+            $this->throwWithNotification($errorMessage);
         }
         return $init->json();
     }
@@ -66,12 +68,12 @@ class TikTokPostingService
     public function postImagesToTikTok(array $imageUrls, string $caption): array
     {
         if (empty($imageUrls)) {
-            throw new \Exception("No image URLs provided.");
+            $this->throwWithNotification("No image URLs provided in tikTok Posting.");
         }
 
         foreach ($imageUrls as $url) {
             if (!filter_var($url, FILTER_VALIDATE_URL)) {
-                throw new \Exception("Invalid image URL: $url");
+                $this->throwWithNotification("Invalid image URL: $url");
             }
         }
 
@@ -102,7 +104,7 @@ class TikTokPostingService
 
         if (!$response->successful()) {
             $errorBody = $response->body();
-            throw new \Exception("TikTok Photo Post Failed: {$errorBody}");
+            $this->throwWithNotification("TikTok Photo Post Failed: {$errorBody}");
         }
 
         return $response->json();
@@ -151,21 +153,24 @@ class TikTokPostingService
             'Content-Length'  => $fileSize,
             'Content-Type'    => 'video/mp4',
         ];
+
         if (!file_exists($videoPath)) {
-            throw new \Exception("Video file does not exist: $videoPath");
+            $this->throwWithNotification("Video file does not exist: $videoPath");
         }
 
         if (!is_readable($videoPath)) {
-            throw new \Exception("Video file is not readable: $videoPath");
+            $this->throwWithNotification("Video file is not readable: $videoPath");
         }
+
         $data = file_get_contents($videoPath);
         if ($data === false) {
-            throw new \Exception("Failed to read video file at: $videoPath");
+            $this->throwWithNotification("Failed to read video file at: $videoPath");
         }
-        $video_data= mb_convert_encoding($data, 'UTF-8', 'UTF-8');
+
+        $video_data = mb_convert_encoding($data, 'UTF-8', 'UTF-8');
 
         if (!mb_check_encoding($video_data, 'UTF-8')) {
-            throw new \Exception("Video file contains invalid UTF-8 characters.");
+            $this->throwWithNotification("Video file contains invalid UTF-8 characters.");
         }
 
         $upload = Http::timeout(720)
@@ -174,7 +179,6 @@ class TikTokPostingService
 
         $this->ensureSuccess($upload, 'TikTok Video Upload Failed');
     }
-
     protected function publishVideo(string $token, string $videoId, string $caption): array
     {
         $publish = Http::withToken($token)
@@ -195,28 +199,33 @@ class TikTokPostingService
     protected function validateVideo(string $videoPath): void
     {
         if (!file_exists($videoPath)) {
-            throw new \Exception("Video file not found at path: {$videoPath}");
+            $this->throwWithNotification("Video file not found at path: {$videoPath}");
         }
 
         if (filesize($videoPath) > $this->maxFileSize) {
-            throw new \Exception("Video file exceeds maximum size of 75MB.");
+            $this->throwWithNotification("Video file exceeds maximum size of 75MB.");
         }
 
         $extension = strtolower(pathinfo($videoPath, PATHINFO_EXTENSION));
         if (!in_array($extension, $this->allowedExtensions)) {
-            throw new \Exception("Invalid video format. Allowed: " . implode(', ', $this->allowedExtensions));
+            $this->throwWithNotification("Invalid video format. Allowed: " . implode(', ', $this->allowedExtensions));
         }
     }
 
     protected function ensureSuccess($response, string $errorMessage): void
     {
         if (!$response->successful()) {
-            throw new \Exception("{$errorMessage}: " . $response->body());
+            $this->throwWithNotification($errorMessage);
         }
     }
 
     protected function getAccessToken(): string
     {
         return $this->storage->getAccessToken();
+    }
+    protected function throwWithNotification(string $message): bool
+    {
+        $this->notifyError($message);
+        throw new \Exception($message);
     }
 }
