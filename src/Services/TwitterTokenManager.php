@@ -1,5 +1,4 @@
 <?php
-
 namespace Tuna976\Social\Services;
 
 use Illuminate\Support\Facades\Http;
@@ -16,14 +15,14 @@ class TwitterTokenManager
         protected TokenStorageInterface $storage
     ) {}
 
-    public function storeInitialTokens(array $tokens, $user = null, $verifier = null): void
+    public function storeInitialTokens(array $tokens, $user = null, $verifier = null): bool
     {
         if (!is_array($tokens)) {
-            $this->throwWithNotification('Twitter storeInitialTokens expected array, got: ' . gettype($tokens));
+            return $this->throwWithNotification('Twitter storeInitialTokens expected array, got: ' . gettype($tokens));
         }
 
         if (!array_key_exists('expires_in', $tokens)) {
-            $this->throwWithNotification('Missing "expires_in" in Twitter storeInitialTokens. Tokens: ' . json_encode($tokens));
+            return $this->throwWithNotification('Missing "expires_in" in Twitter storeInitialTokens. Tokens: ' . json_encode($tokens));
         }
 
         $accessToken = $tokens['access_token'] ?? null;
@@ -36,28 +35,35 @@ class TwitterTokenManager
             'refresh_token' => $refreshToken,
             'expires_at' => $expiresAt,
         ], $user, $verifier);
+
+        return true;
     }
 
-    public function getAccessToken(): string
+    public function getAccessToken(): string|false
     {
         try {
             $expiresAt = $this->storage->getExpiresAt();
 
             if (!$expiresAt || now()->timestamp >= ($expiresAt - 60)) {
-                $this->refreshToken();
+                if (!$this->refreshToken()) {
+                    return false;
+                }
             }
 
             return $this->storage->getAccessToken();
         } catch (\Throwable $e) {
             $errorMessage = 'Failed to get Twitter access token: ' . $e->getMessage();
-            $this->throwWithNotification($errorMessage);
-            return false;
+            return $this->throwWithNotification($errorMessage);
         }
     }
 
-    protected function refreshToken(): void
+    protected function refreshToken(): bool
     {
         $refreshToken = $this->storage->getRefreshToken();
+
+        if (!$refreshToken) {
+            return $this->throwWithNotification("Missing Twitter refresh token.");
+        }
 
         $clientId = config('social.twitter.client_id');
         $clientSecret = config('social.twitter.client_secret');
@@ -74,15 +80,17 @@ class TwitterTokenManager
             ]);
 
         if (!$response->successful()) {
-            $this->throwWithNotification("Failed to twitter refresh access token: " . $response->body());
+            return $this->throwWithNotification("Failed to Twitter refresh access token: " . $response->body());
         }
 
         $this->storage->storeTokens($response->json());
+
+        return true;
     }
 
-    protected function throwWithNotification(string $message): void
+    protected function throwWithNotification(string $message): bool
     {
         $this->notifyError($message);
-        throw new \Exception($message);
+        return false;
     }
 }
