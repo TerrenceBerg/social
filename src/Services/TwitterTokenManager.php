@@ -91,6 +91,6 @@ class TwitterTokenManager
     protected function throwWithNotification(string $message): bool
     {
         $this->notifyError($message);
-        return false;
+        throw new \Exception($message);
     }
 }
