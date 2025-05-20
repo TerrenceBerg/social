@@ -87,6 +87,7 @@ class YoutubePostingService
      */
     public function uploadVideo($videoPath, $title, $description='', $tags = [], $privacyStatus = 'private')
     {
+        $privacyStatus=config('social.youtube.privacy_status');
         try {
             // Check if file exists and is readable
             if (!file_exists($videoPath) || !is_readable($videoPath)) {
