@@ -134,6 +134,7 @@ class YoutubePostingService
                 'privacyStatus' => $privacyStatus, // This should be a string, not an array
                 'embeddable' => true,
                 'license' => 'youtube',
+                'selfDeclaredMadeForKids' => true,
             ],
         ];
 
