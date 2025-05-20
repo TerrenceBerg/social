@@ -40,13 +40,18 @@ class TwitterTokenManager
 
     public function getAccessToken(): string
     {
-        $expiresAt = $this->storage->getExpiresAt();
+        try {
+            $expiresAt = $this->storage->getExpiresAt();
 
-        if (!$expiresAt || now()->timestamp >= ($expiresAt - 60)) {
-            $this->refreshToken();
+            if (!$expiresAt || now()->timestamp >= ($expiresAt - 60)) {
+                $this->refreshToken();
+            }
+
+            return $this->storage->getAccessToken();
+        } catch (\Throwable $e) {
+            $errorMessage = 'Failed to get Twitter access token: ' . $e->getMessage();
+            $this->throwWithNotification($errorMessage);
         }
-
-        return $this->storage->getAccessToken();
     }
 
     protected function refreshToken(): void
