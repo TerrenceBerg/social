@@ -51,6 +51,7 @@ class TwitterTokenManager
         } catch (\Throwable $e) {
             $errorMessage = 'Failed to get Twitter access token: ' . $e->getMessage();
             $this->throwWithNotification($errorMessage);
+            return false;
         }
     }
 
