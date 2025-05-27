@@ -17,7 +17,7 @@ trait HandlesErrorNotifications
         }
 
         if (filter_var(config('social.log_emails.enabled'), FILTER_VALIDATE_BOOLEAN)) {
-            $to = config('social.log_emails.error');
+            $to = config('social.log_emails.social_log_email_address');
             if ($to) {
                 Mail::to($to)->send(new SocialMediaErrorNotification($message));
             }
