@@ -1,6 +1,7 @@
 <?php
 namespace Tuna976\Social;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Tuna976\Social\Concerns\LogsToChannel;
 use Tuna976\Social\Models\SocialAuthUserToken;
@@ -24,13 +25,13 @@ class UserSocialManager
 
     public function redirect(): \Illuminate\Http\RedirectResponse
     {
-        SocialAuthUserToken::where('provider', $this->provider)->where('auth_user_id',auth()->id)->delete();
+        SocialAuthUserToken::where('provider', $this->provider)->where('auth_user_id',Auth::user()->id)->delete();
         $state = Str::random(40);
 
         SocialAuthUserToken::create([
             'provider' => $this->provider,
             'state' => $state,
-            'auth_user_id'=>auth()->id(),
+            'auth_user_id'=>Auth::user()->id,
         ]);
         if ($this->provider === 'tiktok') {
             $authUrl = $this->tiktokService->getAuthorizationUrl($state);
