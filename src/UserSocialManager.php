@@ -25,6 +25,7 @@ class UserSocialManager
 
     public function redirect($user_id=null): \Illuminate\Http\RedirectResponse
     {
+        //User Id from social controller
         SocialAuthUserToken::where('provider', $this->provider)->where('auth_user_id',$user_id)->delete();
         $state = Str::random(40);
 
