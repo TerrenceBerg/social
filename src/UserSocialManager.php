@@ -23,15 +23,16 @@ class UserSocialManager
         return $this;
     }
 
-    public function redirect(): \Illuminate\Http\RedirectResponse
+    public function redirect($user_id=null): \Illuminate\Http\RedirectResponse
     {
-        SocialAuthUserToken::where('provider', $this->provider)->where('auth_user_id',Auth::user()->id)->delete();
+        dd($user_id);
+        SocialAuthUserToken::where('provider', $this->provider)->where('auth_user_id',$user_id)->delete();
         $state = Str::random(40);
 
         SocialAuthUserToken::create([
             'provider' => $this->provider,
             'state' => $state,
-            'auth_user_id'=>Auth::user()->id,
+            'auth_user_id'=>$user_id,
         ]);
         if ($this->provider === 'tiktok') {
             $authUrl = $this->tiktokService->getAuthorizationUrl($state);
