@@ -17,6 +17,7 @@ class SocialAuthUserToken extends Model
         'refresh_token',
         'expires_at',
         'extra_data',
+        'auth_user_id',
     ];
 
     protected $casts = [
