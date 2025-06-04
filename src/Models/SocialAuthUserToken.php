@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Crypt;
 
 class SocialAuthUserToken extends Model
 {
-    protected $table = 'social_auth_tokens';
+    protected $table = 'social_auth_user_tokens';
 
     protected $fillable = [
         'user_id',
