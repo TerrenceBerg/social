@@ -45,7 +45,10 @@ class UserSocialManager
 
     public function handleCallback(string $code, string $state=null): array
     {
+        $state = json_decode(request('state'), true);
+        $userId = $state['user_id'] ?? null;
         $record = SocialAuthUserToken::where('provider', $this->provider)
+            ->where('auth_user_id', $userId)
             ->firstOrFail();
 
         return match ($this->provider) {

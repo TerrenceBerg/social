@@ -46,6 +46,7 @@ class TikTokUserService
             'code' => $code,
             'grant_type' => 'authorization_code',
             'redirect_uri' => $this->redirectUri,
+            'state' => json_encode(['user_id' => auth()->id(), 'source' => 'tiktok-auth']),
         ]);
 
         if (!$response->successful()) {
