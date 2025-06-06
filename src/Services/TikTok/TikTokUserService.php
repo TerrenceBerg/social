@@ -182,18 +182,37 @@ class TikTokUserService
             $this->throwWithNotification('No access token present for this user');
         }
 
-        $response = Http::withToken($accessToken)
-            ->get('https://open.tiktokapis.com/v2/post/list/', [
-                'max_count' => 10, // You can increase this up to 50 if needed
+        try {
+            $response = Http::withToken($accessToken)
+                ->acceptJson()
+                ->get('https://open.tiktokapis.com/v2/post/list/', [
+                    'max_count' => 10,
+                ]);
+
+            $contentType = $response->header('Content-Type');
+            if (!str_contains($contentType, 'application/json')) {
+                \Log::error('TikTok returned non-JSON', [
+                    'content_type' => $contentType,
+                    'body' => $response->body(),
+                ]);
+                $this->throwWithNotification('TikTok returned an unexpected response. Please check API endpoint or token.');
+            }
+
+            if ($response->failed()) {
+                $json = $response->json();
+                $errorMessage = $json['error']['message'] ?? 'Unknown API error';
+                $this->throwWithNotification("Failed to fetch TikTok posts: $errorMessage");
+            }
+
+            return $response->json();
+        } catch (\Throwable $e) {
+            \Log::error('TikTok API Exception', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-        if ($response->failed()) {
-            $json = $response->json();
-            $errorMessage = $json['error']['message'] ?? $response->body();
-            $this->throwWithNotification("Failed to fetch TikTok posts: $errorMessage");
+            $this->throwWithNotification('An error occurred while fetching TikTok posts: ' . $e->getMessage());
         }
-
-        return $response->json();
     }
 
 }
