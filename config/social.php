@@ -54,6 +54,7 @@ return [
         'redirect' => env('TIKTOK_REDIRECT_URI'),
         'scopes' => [
             'user.info.basic',
+            'user.info.profile',
             'video.list',
             'video.upload',
             'video.publish',
