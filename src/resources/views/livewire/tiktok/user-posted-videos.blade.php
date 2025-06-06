@@ -17,6 +17,27 @@
                 </div>
             </div>
         @endif
+        {{-- Upload New Video --}}
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+                <form wire:submit.prevent="uploadVideo">
+                    <div class="mb-3">
+                        <label for="video" class="form-label">Select Video</label>
+                        <input type="file" wire:model="videoFile" accept="video/mp4" class="form-control" id="video">
+                        @error('videoFile') <div class="text-danger small">{{ $message }}</div> @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Video Title</label>
+                        <input type="text" wire:model="title" class="form-control" id="title">
+                        @error('title') <div class="text-danger small">{{ $message }}</div> @enderror
+                    </div>
+                    <button type="submit" class="btn btn-success" wire:loading.attr="disabled">
+                        <span wire:loading.remove>Post to TikTok</span>
+                        <span wire:loading>Posting...</span>
+                    </button>
+                </form>
+            </div>
+        </div>
         {{-- Videos Grid --}}
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
             @forelse ($videos as $video)

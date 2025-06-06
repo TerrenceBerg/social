@@ -4,11 +4,13 @@ namespace Tuna976\Social\Http\Livewire\TikTok;
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Tuna976\Social\Models\SocialAuthUserToken;
 use Tuna976\Social\Services\TikTok\TikTokUserService;
 
 class UserPostedVideos extends Component
 {
+    use WithFileUploads;
     public array $videos = [];
     public ?string $cursor = null;
     public bool $hasMore = false;
@@ -54,5 +56,30 @@ class UserPostedVideos extends Component
     public function render()
     {
         return view('social::livewire.tiktok.user-posted-videos');
+    }
+    public function uploadVideo()
+    {
+        $this->validate();
+
+        try {
+
+            $path = $this->videoFile->store('videos/tiktok', 'public');
+
+            $videoUrl = asset('storage/' . $path);
+
+            // 3. Post video to TikTok
+            $response = $this->service->postVideoFromUrl($videoUrl, $this->title);
+
+            session()->flash('message', 'Video successfully posted to TikTok!');
+
+            // Refresh UI
+            $this->reset(['videoFile', 'title']);
+            $this->videos = [];
+            $this->cursor = null;
+            $this->fetchVideos();
+
+        } catch (\Exception $e) {
+            $this->addError('tiktok', $e->getMessage());
+        }
     }
 }

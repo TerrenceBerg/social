@@ -141,7 +141,6 @@ class TikTokUserService
     {
         return SocialAuthUserToken::where('provider', $this->provider)
             ->where('auth_user_id', auth()->id())
-            ->latest()
             ->first();
     }
 
