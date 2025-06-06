@@ -27,8 +27,7 @@ class UserSocialManager
     {
         //User Id from social controller
         SocialAuthUserToken::where('provider', $this->provider)->where('auth_user_id',$user_id)->delete();
-        $state = Str::random(40);
-
+        $state = json_encode(['user_id' => $user_id, 'source' => 'tiktok-auth']);
         SocialAuthUserToken::create([
             'provider' => $this->provider,
             'state' => $state,
@@ -45,20 +44,19 @@ class UserSocialManager
 
     public function handleCallback(string $code, string $state=null): array
     {
-        $state = json_decode(request('state'), true);
-        $userId = $state['user_id'] ?? null;
+        $state_decoded = json_decode(request('state'), true);
+        $userId = $state_decoded['user_id'] ?? null;
         $record = SocialAuthUserToken::where('provider', $this->provider)
             ->where('auth_user_id', $userId)
             ->firstOrFail();
-
         return match ($this->provider) {
-            'tiktok' => $this->handleTikTok($record, $code),
+            'tiktok' => $this->handleTikTok($record, $code,$state),
             default => throw new \Exception("Provider [{$this->provider}] is not supported."),
         };
     }
-    protected function handleTikTok($record, string $code): array
+    protected function handleTikTok($record, string $code,string $state): array
     {
-        $tokens = $this->tiktokService->getAccessToken($code);
+        $tokens = $this->tiktokService->getAccessToken($code,$state);
 //        $user = $this->tiktokService->getUserProfile($tokens['access_token']);
         $user =['id'=>null];
 
