@@ -10,7 +10,9 @@
                          style="width: 80px; height: 80px; object-fit: cover;">
                     <div>
                         <h5 class="mb-1">{{ $user['display_name'] ?? 'Unknown User' }}</h5>
-                        <small class="text-muted">@{{ $user['username'] ?? 'unknown' }}</small>
+                        <small class="text-muted">
+                            @@{{ $user['username'] ?? 'unknown' }}
+                        </small>
                     </div>
                 </div>
             </div>
