@@ -174,45 +174,79 @@ class TikTokUserService
 
     }
 
-    public function getUserPostedVideos(): array
-    {
-        $accessToken = $this->getTokenRecord()?->access_token;
+//    public function getUserPostedVideos(): array
+//    {
+//        $accessToken = $this->getTokenRecord()?->access_token;
+//
+//        if (!$accessToken) {
+//            $this->throwWithNotification('No access token present for this user');
+//        }
+//
+//        try {
+//            $response = Http::withToken($accessToken)
+//                ->acceptJson()
+//                ->get('https://open.tiktokapis.com/v2/post/list/', [
+//                    'max_count' => 1,
+//                ]);
+//
+//            $contentType = $response->header('Content-Type');
+//            if (!str_contains($contentType, 'application/json')) {
+//                \Log::error('TikTok returned non-JSON', [
+//                    'content_type' => $contentType,
+//                    'body' => $response->body(),
+//                ]);
+//                $this->throwWithNotification('TikTok returned an unexpected response. Please check API endpoint or token.');
+//            }
+//
+//            if ($response->failed()) {
+//                $json = $response->json();
+//                $errorMessage = $json['error']['message'] ?? 'Unknown API error';
+//                $this->throwWithNotification("Failed to fetch TikTok posts: $errorMessage");
+//            }
+//
+//            return $response->json();
+//        } catch (\Throwable $e) {
+//            \Log::error('TikTok API Exception', [
+//                'message' => $e->getMessage(),
+//                'trace' => $e->getTraceAsString(),
+//            ]);
+//
+//            $this->throwWithNotification('An error occurred while fetching TikTok posts: ' . $e->getMessage());
+//        }
+//    }
 
-        if (!$accessToken) {
+    public function getUserPostedVideos(?int $cursor = null, int $maxCount = 10): array
+    {
+        $token = $this->getTokenRecord()?->access_token;
+
+        if (!$token) {
             $this->throwWithNotification('No access token present for this user');
         }
 
-        try {
-            $response = Http::withToken($accessToken)
-                ->acceptJson()
-                ->get('https://open.tiktokapis.com/v2/post/list/', [
-                    'max_count' => 1,
-                ]);
-
-            $contentType = $response->header('Content-Type');
-            if (!str_contains($contentType, 'application/json')) {
-                \Log::error('TikTok returned non-JSON', [
-                    'content_type' => $contentType,
-                    'body' => $response->body(),
-                ]);
-                $this->throwWithNotification('TikTok returned an unexpected response. Please check API endpoint or token.');
-            }
-
-            if ($response->failed()) {
-                $json = $response->json();
-                $errorMessage = $json['error']['message'] ?? 'Unknown API error';
-                $this->throwWithNotification("Failed to fetch TikTok posts: $errorMessage");
-            }
-
-            return $response->json();
-        } catch (\Throwable $e) {
-            \Log::error('TikTok API Exception', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            $this->throwWithNotification('An error occurred while fetching TikTok posts: ' . $e->getMessage());
+        $payload = ['max_count' => $maxCount];
+        if ($cursor) {
+            $payload['cursor'] = $cursor;
         }
+
+        $response = Http::withToken($token)
+            ->post('https://open.tiktokapis.com/v2/video/list/', $payload);
+
+        if ($response->header('Content-Type') === null
+            || str_contains($response->header('Content-Type'), 'application/json') === false) {
+            \Log::error('TikTok returned non-JSON', [
+                'content_type' => $response->header('Content-Type'),
+                'body' => $response->body(),
+            ]);
+            $this->throwWithNotification('TikTok returned an unexpected response; check token or endpoint.');
+        }
+
+        $json = $response->json();
+        if ($response->failed() || !isset($json['data']['videos'])) {
+            $error = $json['error']['message'] ?? $response->body();
+            $this->throwWithNotification("Failed to fetch TikTok posts: $error");
+        }
+
+        return $json;
     }
 
 }
