@@ -20,14 +20,13 @@ class YoutubeOAuthService
 
 
 
-    public function getAuthorizationUrl(): string
+    public function getAuthorizationUrl($state): string
     {
 //        Readonly
         $scopes = implode(' ', [
             'https://www.googleapis.com/auth/youtube.upload',
             // 'https://www.googleapis.com/auth/youtube.readonly',
         ]);
-        $state = bin2hex(random_bytes(16));
         return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query([
                 'response_type' => 'code',
                 'access_type' => 'offline',
