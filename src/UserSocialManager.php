@@ -28,13 +28,7 @@ class UserSocialManager
         SocialAuthUserToken::where('provider', $this->provider)
             ->where('auth_user_id', $user_id)
             ->delete();
-
-        $statePayload = json_encode([
-            'user_id' => $user_id,
-            'source' => 'tiktok-auth'
-        ]);
-
-        $encryptedState = encrypt($statePayload);
+        $encryptedState = 'enc:' . encrypt(json_encode(['user_id' => $user_id, 'source' => 'tiktok-auth']));
 
         SocialAuthUserToken::create([
             'provider' => $this->provider,
@@ -55,7 +49,7 @@ class UserSocialManager
     public function handleCallback(string $code, string $state = null): array
     {
         try {
-            $decodedState = json_decode(decrypt($state), true);
+            $decodedState = json_decode(decrypt(substr($state, 4)), true);
         } catch (\Exception $e) {
             $this->logError('Failed to decrypt state: ' . $e->getMessage());
             throw new \Exception('Invalid or tampered state value');
