@@ -186,7 +186,7 @@ class TikTokUserService
             $response = Http::withToken($accessToken)
                 ->acceptJson()
                 ->get('https://open.tiktokapis.com/v2/post/list/', [
-                    'max_count' => 10,
+                    'max_count' => 1,
                 ]);
 
             $contentType = $response->header('Content-Type');
