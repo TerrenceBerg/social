@@ -61,6 +61,16 @@ class YoutubeOAuthService
             'grant_type' => 'refresh_token',
         ]);
 
-        return $response->json();
+        if ($response->failed()) {
+            throw new \Exception('Failed to refresh YouTube token: ' . $response->body());
+        }
+
+        $data = $response->json();
+
+        if (!isset($data['access_token'])) {
+            throw new \Exception('Invalid token response: ' . json_encode($data));
+        }
+
+        return $data;
     }
 }
