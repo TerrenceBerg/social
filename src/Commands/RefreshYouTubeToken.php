@@ -28,7 +28,7 @@ class RefreshYouTubeToken extends Command
                     return self::FAILURE;
                 }
 
-                $service = new YouTubeOAuthService($storage);
+                $service = new YouTubeOAuthService();
                 $tokens = $service->refreshAccessToken($refreshToken);
 
                 $storage->storeTokens($tokens);
