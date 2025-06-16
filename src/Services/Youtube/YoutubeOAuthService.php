@@ -30,12 +30,11 @@ class YoutubeOAuthService
         return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query([
                 'response_type' => 'code',
                 'access_type' => 'offline',
+                'prompt' => 'consent',
                 'client_id' => $this->clientId,
                 'redirect_uri' => $this->redirectUri,
                 'state' => $state,
-                'scope' => $scopes,
-                'approval_prompt' => 'force',
-                'service' => 'lso'
+                'scope' => $scopes
             ]);
     }
 
