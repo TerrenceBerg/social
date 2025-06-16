@@ -165,6 +165,7 @@ class SocialManager
 
         $record->update([
             'access_token' => $tokens['access_token'] ?? null,
+            'refresh_token' => $tokens['refresh_token'] ?? null,
             'expires_at' => now()->addSeconds($tokens['expires_in'] ?? 3600),
             'user_id' => $user['id'] ?? null,
         ]);
