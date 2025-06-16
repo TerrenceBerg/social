@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Tuna976\Social\Commands\RefreshTikTokToken;
 use Tuna976\Social\Commands\RefreshTwitterToken;
+use Tuna976\Social\Commands\RefreshYouTubeToken;
 use Tuna976\Social\Contracts\TokenStorageInterface;
 use Tuna976\Social\Http\Livewire\TikTok\UserPostedVideos;
 use Tuna976\Social\Services\DatabaseTokenStorage;
@@ -23,6 +24,7 @@ class SocialServiceProvider extends ServiceProvider
         $this->commands([
             RefreshTwitterToken::class,
             RefreshTikTokToken::class,
+            RefreshYouTubeToken::class,
         ]);
 
         // Bind interfaces and services
