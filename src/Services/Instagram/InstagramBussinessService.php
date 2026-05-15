@@ -54,8 +54,11 @@ class InstagramBussinessService
                 $this->logError($errorMessage);
                 throw new \Exception($errorMessage);
             }
+            $childId = $createChild->json()['id'];
+            $this->waitForMediaToBeReady($childId, $accessToken);
 
-            $children[] = $createChild->json()['id'];
+            $children[] = $childId;
+
         }
 
         // Step 2: Create carousel container
@@ -74,6 +77,8 @@ class InstagramBussinessService
         }
 
         $creationId = $createCarousel->json()['id'];
+        $this->waitForMediaToBeReady($creationId, $accessToken);
+
 
         // Step 3: Publish
         return $this->publishMedia($creationId);
@@ -104,6 +109,7 @@ class InstagramBussinessService
         }
 
         $creationId = $createMedia->json()['id'];
+        $this->waitForMediaToBeReady($creationId, $accessToken);
 
         return $this->publishMedia($creationId);
     }
@@ -145,7 +151,7 @@ class InstagramBussinessService
 
         $creationId = $createReel->json()['id'];
 
-        sleep(30);
+        $this->waitForMediaToBeReady($creationId, $accessToken, 30, 5);
 
         return $this->publishMedia($creationId);
     }
@@ -159,37 +165,93 @@ class InstagramBussinessService
     {
         return $this->pageAccessToken;
     }
-    protected function waitForMediaToBeReady(string $creationId, string $accessToken, int $maxAttempts = 15, int $sleepSeconds = 4): bool
-    {
+    protected function waitForMediaToBeReady(
+        string $creationId,
+        string $accessToken,
+        int $maxAttempts = 20,
+        int $sleepSeconds = 5
+    ): bool {
+
         for ($i = 0; $i < $maxAttempts; $i++) {
+
             sleep($sleepSeconds);
 
-            $response = Http::get("https://graph.facebook.com/v22.0/{$creationId}?fields=status_code", [
-                'access_token' => $accessToken,
-            ]);
+            $response = Http::timeout(30)->get(
+                "https://graph.facebook.com/v22.0/{$creationId}",
+                [
+                    'fields'       => 'status_code,status',
+                    'access_token' => $accessToken,
+                ]
+            );
 
-            if ($response->successful()) {
-                $status = $response->json()['status_code'] ?? null;
+            if (!$response->successful()) {
 
-                $errorMessage = "Media status for ID {$creationId}: " . $status;
-                $this->logInfo($errorMessage);
-
-                if ($status === 'FINISHED') {
-                    return true;
-                }
-
-                if ($status === 'ERROR') {
-                    $errorMessage = "Instagram media processing failed: ERROR";
-                    $this->logError($errorMessage);
-                    throw new \Exception($errorMessage);
-                }
-            } else {
                 $errorMessage = "Failed to fetch media status: " . $response->body();
+
                 $this->logError($errorMessage);
+
                 throw new \Exception($errorMessage);
             }
+
+            $data = $response->json();
+
+            $status = $data['status_code'] ?? null;
+
+            $this->logInfo(
+                "Instagram media processing status for {$creationId}: {$status}"
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | SUCCESS
+            |--------------------------------------------------------------------------
+            */
+            if (in_array($status, ['FINISHED', 'PUBLISHED'])) {
+
+                $this->logInfo(
+                    "Instagram media is ready for publishing: {$creationId}"
+                );
+
+                return true;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | FAILURE
+            |--------------------------------------------------------------------------
+            */
+            if (in_array($status, ['ERROR', 'EXPIRED'])) {
+
+                $errorMessage =
+                    "Instagram media processing failed for {$creationId}. Status: {$status}";
+
+                $this->logError($errorMessage);
+
+                throw new \Exception($errorMessage);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | STILL PROCESSING
+            |--------------------------------------------------------------------------
+            */
+            $this->logInfo(
+                "Instagram media still processing for {$creationId}. Attempt "
+                . ($i + 1)
+                . "/{$maxAttempts}"
+            );
         }
 
-        return false;
+        /*
+        |--------------------------------------------------------------------------
+        | TIMEOUT
+        |--------------------------------------------------------------------------
+        */
+        $errorMessage =
+            "Instagram media processing timeout for media ID {$creationId}";
+
+        $this->logError($errorMessage);
+
+        throw new \Exception($errorMessage);
     }
 }
