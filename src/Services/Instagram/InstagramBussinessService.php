@@ -30,6 +30,7 @@ class InstagramBussinessService
     {
         return $this->createAndPublishMedia([
             'video_url' => $videoUrl,
+            'media_type' => 'REELS',
             'caption'   => $caption ?? '',
         ]);
     }
@@ -88,10 +89,21 @@ class InstagramBussinessService
     {
         $mediaType = $this->determineMediaType($url);
 
-        return $this->createAndPublishMedia([
-            $mediaType === 'VIDEO' ? 'video_url' : 'image_url' => $url,
+        $payload = [
             'caption' => $caption ?? '',
-        ]);
+        ];
+
+        if ($mediaType === 'VIDEO') {
+
+            $payload['media_type'] = 'REELS';
+            $payload['video_url'] = $url;
+
+        } else {
+
+            $payload['image_url'] = $url;
+        }
+
+        return $this->createAndPublishMedia($payload);
     }
 
     protected function createAndPublishMedia(array $payload): array
