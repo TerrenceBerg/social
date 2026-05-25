@@ -56,7 +56,7 @@ class InstagramBussinessService
                 throw new \Exception($errorMessage);
             }
             $childId = $createChild->json()['id'];
-            $this->waitForMediaToBeReady($childId, $accessToken);
+//            $this->waitForMediaToBeReady($childId, $accessToken);
 
             $children[] = $childId;
 
@@ -78,7 +78,7 @@ class InstagramBussinessService
         }
 
         $creationId = $createCarousel->json()['id'];
-        $this->waitForMediaToBeReady($creationId, $accessToken);
+//        $this->waitForMediaToBeReady($creationId, $accessToken);
 
 
         // Step 3: Publish
@@ -106,7 +106,8 @@ class InstagramBussinessService
         return $this->createAndPublishMedia($payload);
     }
 
-    protected function createAndPublishMedia(array $payload): array
+    protected function
+    createAndPublishMedia(array $payload): array
     {
         $accessToken = $this->getAccessToken();
 
@@ -121,7 +122,7 @@ class InstagramBussinessService
         }
 
         $creationId = $createMedia->json()['id'];
-        $this->waitForMediaToBeReady($creationId, $accessToken);
+//        $this->waitForMediaToBeReady($creationId, $accessToken);
 
         return $this->publishMedia($creationId);
     }
@@ -163,7 +164,7 @@ class InstagramBussinessService
 
         $creationId = $createReel->json()['id'];
 
-        $this->waitForMediaToBeReady($creationId, $accessToken, 30, 5);
+//        $this->waitForMediaToBeReady($creationId, $accessToken, 30, 5);
 
         return $this->publishMedia($creationId);
     }
